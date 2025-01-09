@@ -18,7 +18,7 @@ net user >> $usrlog
 net localgroup administrators >> $usrlog
 
 ## view open connections
-netstat -onb
+netstat -ano
 
 ##Windows features
 get-windowsfeature | where installed
