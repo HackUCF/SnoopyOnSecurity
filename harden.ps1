@@ -10,6 +10,19 @@ $exc = @('krbtgt')
 # ccsclient directory (firewall exclusion)
 $ccs = "C:\ccs"
 
+## password changes
+$usrlog = "C:\windows\logs\usr.log.txt"
+net user 
+net localgroup administrators
+net user >> $usrlog
+net localgroup administrators >> $usrlog
+
+## view open connections
+netstat -onb
+
+##Windows features
+get-windowsfeature | where installed
+
 ## downlaods
 Invoke-WebRequest -Uri "https://download.sysinternals.com/files/SysinternalsSuite.zip" -OutFile "C:\Users\sysinternals.zip"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml" -OutFile "C:\Users\config.xml"
@@ -17,6 +30,34 @@ Invoke-WebRequest -Uri "https://www.voidtools.com/Everything-1.4.1.1005.x64.zip"
 
 Expand-Archive -Path "C:\Users\sysinternals.zip" -DestinationPath "C:\Users\sysinternals\" -Force
 Expand-Archive -Path "C:\Users\everything.zip" -DestinationPath "C:\Users\everything\" -Force
+
+## sysmon
+C:\Users\sysinternals\sysmon.exe -accepteula -i C:\Users\config.xml
+
+## uac
+reg ADD HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 1 /f
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 4
+
+## smbv1
+Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" SMB1 -Type DWORD -Value 0 -Force
+
+## ps transcripts
+New-Item -Path $profile.AllUsersCurrentHost -Type File -Force
+$content = @'
+$path       = "C:\Windows\Logs\"
+$username   = $env:USERNAME
+$hostname   = hostname
+$datetime   = Get-Date -f 'MM/dd-HH:mm:ss'
+$filename   = "transcript-${username}-${hostname}-${datetime}.txt"
+$Transcript = Join-Path -Path $path -ChildPath $filename
+Start-Transcript
+'@
+set-content -path $profile.AllUsersCurrentHost -value $content -force
+
+## enable NLA
+
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 1 /f
 
 ## firewall
 # file to store original firewall state
@@ -36,8 +77,6 @@ do {
 New-NetFirewallRule -DisplayName "[ Subnet ]" -Direction Inbound -Protocol Any -Action Allow -RemoteAddress $subnets
 New-NetFirewallRule -DisplayName "[ Subnet ]" -Direction Outbound -Protocol Any -Action Allow -RemoteAddress $subnets
 New-NetFirewallRule -DisplayName "[ RDP ]" -Direction Inbound -Protocol TCP -Action Allow -LocalPort 3389
-New-NetFirewallRule -DisplayName "[ WinRM ]" -Direction Inbound -Protocol TCP -Action Allow -LocalPort 5985
-
 New-NetFirewallRule -DisplayName "[ Ping ]" -Direction Inbound -Protocol ICMPv4 -Action Allow
 
 if (test-path -path $ccs ) {
@@ -66,65 +105,10 @@ foreach ($port in $ports) {
     New-NetFirewallRule -DisplayName ("[ UDP $port ]") -Direction Inbound -Protocol UDP -Action Allow -LocalPort ([int]$port)
 }
 
-Set-NetFirewallProfile -All -DefaultInboundAction Block -DefaultOutboundAction Block
 
-## password changes
-$usrlog = "C:\windows\logs\usr.log.txt"
-net user >> $usrlog
-net localgroup administrators >> $usrlog
-clear-variable pass 2>$null
-do {
-    if((get-variable pass 2>$null).Value -ne $null) {
-        echo "passwords must match"
-    }
-    $pass = Read-Host "password 1"
-    $pass2 = Read-Host "password 2"
-} while ($pass -ne $pass2)
-
-do {
-    $name = read-host "exclude a user"
-    if ($name -ne "") { $exc += $name }
-} while ($name -ne "")
-
-get-localuser | % {
-    if (($_.name -notin $exc) -and ($_.name -notlike "*$")) {
-        add-content -path $logpath -value ("password changed for " + $_.name)
-        net user $_.name $pass
-    }
-}
-
-clear-variable pass
-clear-variable pass2
-
-# backup user
-$name = read-host "backup username"
-do {
-    if((get-variable pass 2>$null).Value -ne $null) {
-        echo "passwords must match"
-    }
-    $pass = Read-Host "backup password 1"
-    $pass2 = Read-Host "backup password 2"
-} while ($pass -ne $pass2)
-net user $name $pass /add
-net localgroup administrators $name /add
-
-clear-variable pass
-clear-variable pass2
-
-## uac
-reg ADD HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 1 /f
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 4
-
-## winrm (wierd port)
-winrm quickconfig -quiet
-winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-
-## smbv1
-Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" SMB1 -Type DWORD -Value 0 -Force
 
 ## sticky keys
-$hash = get-filehash C:\Windows\System32\cmd.exe
+$hash = get-ilehash C:\Windows\System32\cmd.exe
 echo $hash
 gci -r -depth 1 C:\Windows\system32\ | % {
     $path = $_.fullname
@@ -137,8 +121,6 @@ gci -r -depth 1 C:\Windows\system32\ | % {
     }
 }
 
-## sysmon
-C:\Users\sysinternals\sysmon.exe -accepteula -i C:\Users\config.xml
 
 ## pii
 Start-Job -ScriptBlock {
@@ -156,16 +138,4 @@ Start-Job -ScriptBlock {
         }
     }
 }
-
-## ps transcripts
-New-Item -Path $profile.AllUsersCurrentHost -Type File -Force
-$content = @'
-$path       = "C:\Windows\Logs\"
-$username   = $env:USERNAME
-$hostname   = hostname
-$datetime   = Get-Date -f 'MM/dd-HH:mm:ss'
-$filename   = "transcript-${username}-${hostname}-${datetime}.txt"
-$Transcript = Join-Path -Path $path -ChildPath $filename
-Start-Transcript
-'@
-set-content -path $profile.AllUsersCurrentHost -value $content -force
+f
