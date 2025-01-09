@@ -108,7 +108,7 @@ foreach ($port in $ports) {
 
 
 ## sticky keys
-$hash = get-ilehash C:\Windows\System32\cmd.exe
+$hash = get-filehash C:\Windows\System32\cmd.exe
 echo $hash
 gci -r -depth 1 C:\Windows\system32\ | % {
     $path = $_.fullname
@@ -138,4 +138,3 @@ Start-Job -ScriptBlock {
         }
     }
 }
-f
