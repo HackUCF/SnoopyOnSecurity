@@ -1,0 +1,54 @@
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorHostPolicy
+metadata:
+  name: ccdc-network-block
+spec:
+  nodeSelector:
+    matchLabels:
+      kubearmor.io/hostname: "*" # Apply to all hosts
+  network:
+    matchProtocols:
+    - protocol: tcp
+      fromSource:
+      - path: /usr/local/sbin/nc
+      - path: /usr/local/bin/nc
+      - path: /usr/sbin/nc
+      - path: /usr/bin/nc
+      - path: /sbin/nc
+      - path: /bin/nc
+      - path: /usr/games/nc
+      - path: /usr/local/games/nc
+      - path: /usr/local/sbin/ncat
+      - path: /usr/local/bin/ncat
+      - path: /usr/sbin/ncat
+      - path: /usr/bin/ncat
+      - path: /sbin/ncat
+      - path: /bin/ncat
+      - path: /usr/games/ncat
+      - path: /usr/local/games/ncat
+      - path: /usr/local/sbin/netcat
+      - path: /usr/local/bin/netcat
+      - path: /usr/sbin/netcat
+      - path: /usr/bin/netcat
+      - path: /sbin/netcat
+      - path: /bin/netcat
+      - path: /usr/games/netcat
+      - path: /usr/local/games/netcat
+      - path: /usr/local/sbin/socat
+      - path: /usr/local/bin/socat
+      - path: /usr/sbin/socat
+      - path: /usr/bin/socat
+      - path: /sbin/socat
+      - path: /bin/socat
+      - path: /usr/games/socat
+      - path: /usr/local/games/socat
+      - path: /usr/local/sbin/teleport
+      - path: /usr/local/bin/teleport
+      - path: /usr/sbin/teleport
+      - path: /usr/bin/teleport
+      - path: /sbin/teleport
+      - path: /bin/teleport
+      - path: /usr/games/teleport
+      - path: /usr/local/games/teleport
+  action:
+    Block

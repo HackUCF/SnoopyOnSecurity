@@ -1,0 +1,39 @@
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorHostPolicy
+metadata:
+  name: ccdc-readonly-general
+spec:
+  nodeSelector:
+    matchLabels:
+      kubearmor.io/hostname: "*" # Apply to all hosts
+  file:
+    matchDirectories:
+      - dir: /usr/
+        recursive: true
+        readOnly: true
+      - dir: /opt/
+        recursive: true
+        readOnly: true
+      - dir: /root/
+        recursive: true
+        readOnly: true
+      - dir: /lib/
+        recursive: true
+        readOnly: true
+      - dir: /lib64/
+        recursive: true
+        readOnly: true
+      - dir: /srv/
+        recursive: true
+        readOnly: true
+      - dir: /mnt/
+        recursive: true
+        readOnly: true
+      - dir: /snap/
+        recursive: true
+        readOnly: true
+      - dir: /tmp/
+        recursive: true
+        readOnly: true
+  action:
+    Block
