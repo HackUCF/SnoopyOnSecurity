@@ -1,0 +1,72 @@
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorHostPolicy
+metadata:
+  name: sensitive-syscall
+spec:
+  severity: 3
+  nodeSelector:
+    matchLabels:
+      kubearmor.io/hostname: "*" # Apply to all hosts
+  message: "Alert! Sensitive syscall detected"
+  syscalls:
+    severity: 1
+    matchSyscalls:
+    - syscall:
+      - unlink
+      - unlinkat
+      - rename
+      - renameat
+      - rmdir
+      - chmod
+      - chown
+      - fchown
+      - fchownat
+      - lchown
+      - ptrace
+      - mmap
+      - mprotect
+      - execve
+      - execveat
+      - fork
+      - clone
+      - prctl
+      - setuid
+      - setgid
+      - setreuid
+      - setregid
+      - capset
+      - unshare
+      - mount
+      - umount
+      - chroot
+      - syslog
+      - getdents
+      - inotify_add_watch
+      - socket
+      - bind
+      - listen
+      - connect
+      - send
+      - recv
+      - getpeername
+      - getsockname
+      - setsockopt
+      - futex
+      - reboot
+      - sys_shutdown
+      - ioctl
+      - sched_setscheduler
+      - gettimeofday
+      - sysinfo
+      - keyctl
+      - perf_event_open
+      - bpf
+      - shmget
+      - shmat
+      - shmdt
+      - shmctl
+      - msgsnd
+      - msgrcv
+      - semop
+      - semctl
+  action: Audit
