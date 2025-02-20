@@ -80,7 +80,7 @@ echo "Run this command to restart sshd: systemctl restart sshd"
 echo -e "\033[34m[i] Updating Packages\033[0m"
 if command -v apt >/dev/null; then
     apt update
-    apt install --reinstall openssh-server auditd ripgrep clamav debsums libapache2-mod-security2 acl -y
+    apt install --reinstall openssh-server auditd ripgrep debsums libapache2-mod-security2 acl -y
     sudo apt -o Dpkg::Options::="--force-confmiss" install --reinstall libpam-modules -y
     apt remove --purge cron crontab at -y
     apt install --reinstall libpam-modules -y
@@ -92,7 +92,7 @@ elif command -v yum >/dev/null; then
     sudo yum reinstall pam openssh-server -y
     yum remove cronie chrony cronie-noanacron at cronie-anacron crontabs -y
 elif command -v pacman >/dev/null; then
-    pacman -S --noconfirm --needed openssh audit clamav pam acl apache-mod-security
+    pacman -S --noconfirm --needed openssh audit pam acl apache-mod-security
     pacman -Rns --noconfirm cronie at
     pacman -S --noconfirm pam --needed
 else
