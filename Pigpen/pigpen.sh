@@ -1,5 +1,6 @@
 #!/bin/bash
 
+chmod +x rg
 # Threshold for awk filtering
 THRESHOLD=3
 
