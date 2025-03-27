@@ -4,8 +4,8 @@ $logpath = "C:\Windows\Logs\log.txt"
 # ip/cidr subnets for firewalling
 $subnets = @()
 
-# BTA directory (firewall exclusion)
-$ccs = "C:\Program Files\BTA"
+# ccs directory (firewall exclusion)
+$ccs = "C:\ccs"
 
 ## password changes
 $usrlog = "C:\windows\logs\usr.log.txt"
@@ -80,6 +80,10 @@ do {
 foreach ($btaIP in $btaIPs) {
     New-NetFirewallRule -DisplayName ("[ BTA IP $btaIP ]") -Direction Outbound -Protocol any -Action Allow -RemoteAddress $btaIP
 }
+
+New-NetFirewallRule -DisplayName "[ Blackteam ]" -Direction Outbound -Protocol Any -Action Allow -RemoteAddress 10.120.0.111
+New-NetFirewallRule -DisplayName "[ Proxy ]" -Direction Outbound -Protocol TCP -Action Allow -RemotePort 8080 -RemoteAddress 10.120.0.200
+New-NetFirewallRule -DisplayName "[ Proxy ]" -Direction Outbound -Protocol UDP -Action Allow -RemotePort 8080 -RemoteAddress 10.120.0.200
 
 Set-NetFirewallProfile -All -DefaultInboundAction Block -DefaultOutboundAction Block
 
