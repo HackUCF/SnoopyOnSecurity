@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root version="5" type="3" timestamp="1743036351">
+	<apps>
+		<item path="CryptSvc" timestamp="1710091865" is_undeletable="true"/>
+		<item path="Dhcp" timestamp="1710091865" is_undeletable="true"/>
+		<item path="Dnscache" timestamp="1710091865" is_undeletable="true"/>
+		<item path="DoSvc" timestamp="1710091865" is_undeletable="true"/>
+		<item path="NlaSvc" timestamp="1710091865" is_undeletable="true"/>
+		<item path="Spooler" timestamp="1710091865" is_undeletable="true"/>
+		<item path="UsoSvc" timestamp="1710091865" is_undeletable="true"/>
+		<item path="wlidsvc" timestamp="1710091865" is_undeletable="true"/>
+		<item path="wuauserv" timestamp="1710083343" is_undeletable="true"/>
+		<item path="C:\windows\system32\SppExtComObj.exe" timestamp="1741673210" is_undeletable="true"/>
+		<item path="C:\windows\system32\lsass.exe" timestamp="1741673210" is_undeletable="true"/>
+		<item path="C:\Program Files\simplewall\simplewall.exe" timestamp="1741673210" is_undeletable="true" is_enabled="true"/>
+		<item path="System" timestamp="1741673210" is_undeletable="true" is_enabled="true"/>
+		<item path="C:\windows\system32\svchost.exe" timestamp="1741673210" is_undeletable="true"/>
+	</apps>
+	<rules_custom>
+		<item name="Backup RDP [Inbound]" rule_local="3389;" dir="1" protocol="6" is_enabled="true"/>
+	</rules_custom>
+	<rules_config>
+		<item name="Cryptographic service" is_enabled="false"/>
+		<item name="DHCP" is_enabled="false"/>
+		<item name="IGMP" is_enabled="false"/>
+		<item name="KMS service" is_enabled="false"/>
+		<item name="LLMNR" is_enabled="false"/>
+		<item name="mDNS" is_enabled="false"/>
+		<item name="NCSI" is_enabled="false"/>
+		<item name="NetBIOS [inbound]" is_enabled="false"/>
+		<item name="NetBIOS [outbound]" is_enabled="false"/>
+		<item name="NTP" is_enabled="false"/>
+		<item name="Security policy" is_enabled="false"/>
+		<item name="SSDP [inbound]" is_enabled="false"/>
+		<item name="SSDP [outbound]" is_enabled="false"/>
+		<item name="UPnP" is_enabled="false"/>
+		<item name="RDP [inbound]" is_enabled="true"/>
+		<item name="WS-Discovery [events]" is_enabled="false"/>
+		<item name="WS-Discovery" is_enabled="false"/>
+		<item name="DNS" is_enabled="false"/>
+	</rules_config>
+</root>
