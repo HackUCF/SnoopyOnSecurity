@@ -1,7 +1,6 @@
 package installer
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -54,14 +53,6 @@ func setupService() error {
 	}
 
 	log.Info("Service installed successfully.")
-
-	// Enable and start the service
-	if err := s.Start(); err != nil {
-		log.Error("Failed to start service", "error", err)
-		return err
-	}
-
-	log.Info("Service started successfully.")
 	return nil
 }
 
@@ -112,12 +103,6 @@ func RunInstallation() error {
 	// Setup the service
 	if err := setupService(); err != nil {
 		log.Error("Failed to setup service", "error", err)
-		return err
-	}
-
-	// Set sysctl fs.inotify.max_user_watches permanently
-	if err := setSysctl("fs.inotify.max_user_watches", "524288"); err != nil {
-		log.Error("Failed to set sysctl parameter", "error", err)
 		return err
 	}
 
@@ -306,24 +291,5 @@ func copyExecutable(sourceExecutable, destDir string) error {
 	}
 
 	log.Info("Executable copied and permissions set successfully", "destination", destPath)
-	return nil
-}
-
-// setSysctl sets a sysctl parameter permanently by adding it to /etc/sysctl.conf
-func setSysctl(param, value string) error {
-	sysctlLine := fmt.Sprintf("%s=%s\n", param, value)
-	file, err := os.OpenFile("/etc/sysctl.conf", os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Error("Failed to open /etc/sysctl.conf", "error", err)
-		return err
-	}
-	defer file.Close()
-
-	if _, err := file.WriteString(sysctlLine); err != nil {
-		log.Error("Failed to write to /etc/sysctl.conf", "error", err)
-		return err
-	}
-
-	log.Info("Sysctl parameter set successfully", "parameter", param, "value", value)
 	return nil
 }

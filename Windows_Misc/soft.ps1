@@ -17,6 +17,9 @@ mkdir c:\bob
 reg ADD HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription /v EnableTranscripting /t REG_DWORD /d 1 /f
 reg ADD HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription /v OutputDirectory /t REG_SZ /d "C:\bob" /f
 
+# services backup
+reg export "HKLM\SYSTEM\CurrentControlSet\Services" C:\bob\service.reg /y
+
 ## firewall
 # file to store original firewall state
 $wflog = "C:\Windows\Logs\wf.log.txt"
@@ -115,9 +118,9 @@ New-NetFirewallRule -DisplayName "bob2" -Direction Outbound -Protocol UDP -Remot
 
 [Net.ServicePointManager]::SecurityProtocol = "Tls, Tls11, Tls12, Ssl3"
 
-Invoke-WebRequest -Uri "https://download.sysinternals.com/files/SysinternalsSuite.zip" -OutFile "C:\Users\sysinternals.zip"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml" -OutFile "C:\Users\config.xml"
-Invoke-WebRequest -Uri "https://www.voidtools.com/Everything-1.4.1.1005.x64.zip" -OutFile "C:/users/everything.zip"
+Invoke-WebRequest -Uri "https://download.sysinternals.com/files/SysinternalsSuite.zip" -UseBasicParsing -OutFile "C:\Users\sysinternals.zip"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml" -UseBasicParsing -OutFile "C:\Users\config.xml"
+Invoke-WebRequest -Uri "https://www.voidtools.com/Everything-1.4.1.1005.x64.zip" -UseBasicParsing -OutFile "C:/users/everything.zip"
 
 
 Expand-Archive -Path "C:\Users\sysinternals.zip" -DestinationPath "C:\Users\sysinternals\" -Force

@@ -4,7 +4,7 @@ This rule detects when a process starts and executes from suspicious locations s
 """
 id = "1efdddfa-4678-6d30-a98d-1fcb24001ca8"
 license = "Apache License 2.0"
-name = "Linux Suspicious Run from Sus Location"
+name = "Linux Suspicious Mgmt Agent Process Execution"
 os_list = ["linux"]
 version = "1.0.0"
 

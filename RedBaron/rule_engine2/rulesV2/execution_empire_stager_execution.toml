@@ -12,7 +12,7 @@ version = "1.0.29"
 
 query = '''
   process.name in ["python3","python", "osascript", "sh", "bash", "dash", "ksh", "tcsh", "zsh"] and
-  process.args like "*exec(base64.b64decode*aW1wb3J0IHN5cztpbXBvcnQg*"
+  process.command_line like "*exec(base64.b64decode*aW1wb3J0IHN5cztpbXBvcnQg*"
   '''
 
 min_endpoint_version = "7.15.0"
