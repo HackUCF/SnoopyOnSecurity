@@ -135,12 +135,40 @@ $logpath = "C:\Windows\Logs\log.txt"
 # default excluded users for password changes
 $exc = @('krbtgt', 'blackteam_adm')
 
-$usrlog = "C:\windows\logs\usr.log.txt"
+# Function to generate a random password meeting AD complexity requirements
+function New-RandomPassword {
+    param(
+        [int]$length = 13,
+        [string]$username
+    )
+    # Define character sets
+    $upper   = 65..90 | ForEach-Object { [char]$_ }
+    $lower   = 97..122 | ForEach-Object { [char]$_ }
+    $digit   = 48..57 | ForEach-Object { [char]$_ }
+    $special = "!", "@", "#", "$", "%", "^", "&", "*"
+    $all     = $upper + $lower + $digit + $special
+    
+    $passwordChars = $username.ToCharArray()
+    $passwordChars += @(
+        Get-Random -InputObject $upper
+        Get-Random -InputObject $lower
+        Get-Random -InputObject $digit
+        Get-Random -InputObject $special
+    )
+    while ($passwordChars.Count -lt $length) {
+        $passwordChars += Get-Random -InputObject $lower
+    }
+    return -join $passwordChars
+}
+
+$rand = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 4 | ForEach-Object {[char]$_})
+$usrlog = "C:\windows\logs\usr.log-$rand.txt"
+$usrsheet = "C:\windows\logs\usr.sheet-$rand.txt"
 net user >> $usrlog
 net localgroup administrators >> $usrlog
 clear-variable pass 2>$null
 do {
-    if((get-variable pass 2>$null).Value -ne $null) {
+    if ((get-variable pass 2>$null).Value -ne $null) {
         echo "passwords must match"
     }
     $pass = Read-Host "password 1"
@@ -153,7 +181,13 @@ do {
 get-wmiobject -class win32_useraccount | % {
     if (($_.name -notin $exc) -and ($_.name -notlike "*$")) {
         add-content -path $logpath -value ("password changed for " + $_.name)
-        net user $_.name $pass
+        if ($_.name -eq $env:USERNAME) {
+            net user $_.name $pass
+        } else {
+            $randpass = New-RandomPassword
+            echo "$($_.Name),$randpass" >> $usrsheet
+            net user $_.name "`"$randpass`""
+        }
     }
 }
 clear-variable pass
@@ -244,35 +278,76 @@ echo ' echo $intended' >> C:\Users\audit.ps1
 echo ' ' >> C:\Users\audit.ps1
 echo ' Get-ADUser -Filter * | % {if ($_.name -notin $intended) { if ($d) { echo "disabled $_.name" >> Disabled.txt; net user $_.name /active:no } else { echo "not intended $_.name" >> NotIntended.txt  } } }' >> C:\Users\audit.ps1
 
-echo ' ## password changes' > C:\Users\pass.ps1
-echo ' $logpath = "C:\Windows\Logs\log.txt"' >> C:\Users\pass.ps1
-echo ' # default excluded users for password changes' >> C:\Users\pass.ps1
-echo ' $exc = @("krbtgt", "blackteam_adm")' >> C:\Users\pass.ps1
-echo ' ' >> C:\Users\pass.ps1
-echo ' $usrlog = "C:\windows\logs\usr.log.txt"' >> C:\Users\pass.ps1
-echo ' net user >> $usrlog' >> C:\Users\pass.ps1
-echo ' net localgroup administrators >> $usrlog' >> C:\Users\pass.ps1
-echo ' clear-variable pass 2>$null' >> C:\Users\pass.ps1
-echo ' do {' >> C:\Users\pass.ps1
-echo '     if((get-variable pass 2>$null).Value -ne $null) {' >> C:\Users\pass.ps1
-echo '         echo "passwords must match"' >> C:\Users\pass.ps1
-echo '     }' >> C:\Users\pass.ps1
-echo '     $pass = Read-Host "password 1"' >> C:\Users\pass.ps1
-echo '     $pass2 = Read-Host "password 2"' >> C:\Users\pass.ps1
-echo ' } while ($pass -ne $pass2)' >> C:\Users\pass.ps1
-echo ' do {' >> C:\Users\pass.ps1
-echo '     $name = read-host "exclude a user"' >> C:\Users\pass.ps1
-echo '     if ($name -ne "") { $exc += $name }' >> C:\Users\pass.ps1
-echo ' } while ($name -ne "")' >> C:\Users\pass.ps1
-echo ' get-wmiobject -class win32_useraccount | % {' >> C:\Users\pass.ps1
-echo '     if (($_.name -notin $exc) -and ($_.name -notlike "*$")) {' >> C:\Users\pass.ps1
-echo '         add-content -path $logpath -value ("password changed for " + $_.name)' >> C:\Users\pass.ps1
-echo '         net user $_.name $pass' >> C:\Users\pass.ps1
-echo '     }' >> C:\Users\pass.ps1
-echo ' }' >> C:\Users\pass.ps1
-echo ' clear-variable pass' >> C:\Users\pass.ps1
-echo ' clear-variable pass2' >> C:\Users\pass.ps1
+# Generate password change script
+$filepath = 'C:\Users\pass.ps1'
+if (!(Test-Path $filepath)) {
+    New-Item -Path $filepath -ItemType File -Force | Out-Null
+}
+$scriptContent = @'
+## password changes
+$logpath = "C:\Windows\Logs\log.txt"
+# default excluded users for password changes
+$exc = @('krbtgt', 'blackteam_adm')
 
+# Function to generate a random password meeting AD complexity requirements
+function New-RandomPassword {
+    param(
+        [int]$length = 13,
+        [string]$username
+    )
+    # Define character sets
+    $upper   = 65..90 | ForEach-Object { [char]$_ }
+    $lower   = 97..122 | ForEach-Object { [char]$_ }
+    $digit   = 48..57 | ForEach-Object { [char]$_ }
+    $special = "!", "@", "#", "$", "%", "^", "&", "*"
+    $all     = $upper + $lower + $digit + $special
+    
+    $passwordChars = $username.ToCharArray()
+    $passwordChars += @(
+        Get-Random -InputObject $upper
+        Get-Random -InputObject $lower
+        Get-Random -InputObject $digit
+        Get-Random -InputObject $special
+    )
+    while ($passwordChars.Count -lt $length) {
+        $passwordChars += Get-Random -InputObject $lower
+    }
+    return -join $passwordChars
+}
+
+$rand = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 4 | ForEach-Object {[char]$_})
+$usrlog = "C:\windows\logs\usr.log-$rand.txt"
+$usrsheet = "C:\windows\logs\usr.sheet-$rand.txt"
+net user >> $usrlog
+net localgroup administrators >> $usrlog
+clear-variable pass 2>$null
+do {
+    if ((get-variable pass 2>$null).Value -ne $null) {
+        echo "passwords must match"
+    }
+    $pass = Read-Host "password 1"
+    $pass2 = Read-Host "password 2"
+} while ($pass -ne $pass2)
+do {
+    $name = read-host "exclude a user"
+    if ($name -ne "") { $exc += $name }
+} while ($name -ne "")
+get-wmiobject -class win32_useraccount | % {
+    if (($_.name -notin $exc) -and ($_.name -notlike "*$")) {
+        add-content -path $logpath -value ("password changed for " + $_.name)
+        if ($_.name -eq $env:USERNAME) {
+            net user $_.name $pass
+        } else {
+            $randpass = New-RandomPassword
+            echo "$($_.Name),$randpass" >> $usrsheet
+            net user $_.name "`"$randpass`""
+        }
+    }
+}
+clear-variable pass
+clear-variable pass2
+'@
+Set-Content -Path $filepath -Value $scriptContent
 
 Start-Job -FilePath "C:\Users\pii.ps1" -Name "PiiJob"
 
