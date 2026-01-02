@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [ 
+    "flying-ace-engine",
+    "rb2-userspace",
+]
+default-members = ["rb2-userspace"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2024"
+
+[profile.release]
+strip = true

@@ -1,0 +1,5 @@
+name: privileged_user_uid0
+eval: |
+  (
+    e.user_id == 0
+  )

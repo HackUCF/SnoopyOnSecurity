@@ -1,0 +1,3 @@
+# rules/unit_test_1.yaml
+name: suspicious_process
+eval: e.process_name == "nc" && e.event_category == "process"

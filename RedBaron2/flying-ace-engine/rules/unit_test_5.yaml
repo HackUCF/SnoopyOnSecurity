@@ -1,0 +1,4 @@
+name: bash_base64_execution
+eval: e.process_name == "bash" &&
+      e.process_args.to_lower().contains("base64") &&
+      e.event_category == "process"

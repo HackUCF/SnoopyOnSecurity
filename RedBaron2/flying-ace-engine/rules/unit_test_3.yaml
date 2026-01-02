@@ -1,0 +1,4 @@
+name: curl_upload_file
+eval: e.process_name == "curl" &&
+      e.process_args.contains("--upload-file") &&
+      e.event_category == "process"

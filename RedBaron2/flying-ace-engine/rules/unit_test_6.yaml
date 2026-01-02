@@ -1,0 +1,7 @@
+name: curl_upload_file_regex
+eval: |
+  (
+    e.process_name == "curl" &&
+    re_match(e.process_args, "--upload-file\\s+\\S+")
+  )
+

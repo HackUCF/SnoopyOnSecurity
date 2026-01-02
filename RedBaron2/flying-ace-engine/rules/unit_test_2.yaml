@@ -1,0 +1,4 @@
+name: reverse_shell_nc
+eval: (e.process_name == "nc" || e.process_name == "ncat") &&
+      e.process_args.contains("-e") &&
+      e.event_category == "process"

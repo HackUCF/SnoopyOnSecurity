@@ -1,0 +1,49 @@
+[package]
+name = "rb2-userspace"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+flying-ace-engine = { path = "../flying-ace-engine" }
+anyhow      = { version = "1.0.100", default-features = false }
+async-trait = { version = "0.1.89", default-features = false }
+aya         = { version = "0.13.1", default-features = false, features = ["async_tokio"] }
+bytes       = { version = "1.11.0", default-features = false }
+chrono      = { version = "0.4.42", default-features = false, features = ["alloc", "clock"] }
+env_logger  = { version = "0.11.8", default-features = false, features = ["auto-color"] }
+iptables    = { version = "0.6.0", default-features = false }
+libc        = { version = "0.2.178", default-features = false }
+linux-audit-parser = { version = "0.2.7", default-features = false }
+log         = { version = "0.4.29", default-features = false, features = ["release_max_level_debug"] }
+nfq         = { version = "0.2.5", default-features = false }
+once_cell   = { version = "1.21.3", default-features = false }
+sysinfo     = { version = "0.37.2", default-features = false, features = ["system"] }
+tar         = { version = "0.4.44", default-features = false }
+tokio-stream = { version = "0.1.17", default-features = false }
+tokio       = { version = "1.48.0", default-features = false, features = [
+  "time",
+  "macros",
+  "rt",
+  "rt-multi-thread",
+  "net",
+  "signal",
+  "sync",
+  "fs",
+  "io-util",
+  "process",
+] }
+ureq        = { version = "3.1.4", default-features = false, features = ["rustls"] }
+xxhash-rust = { version = "0.8.15", features = ["xxh3"] }
+xz2         = { version = "0.1.7", default-features = false }
+yaml-rust2  = { version = "0.11.0", default-features = false }
+yara-x      = { version = "1.5", default-features = false }
+serde_json  = { version = "1.0.145", default-features = false }
+regex       = { version = "1.12.2", default-features = false }
+base64      = { version = "0.22.1", default-features = false }
+
+[build-dependencies]
+xz2 = { version = "0.1.7", default-features = false }
+
+[[bin]]
+name = "rb2"
+path = "src/main.rs"
