@@ -1,0 +1,5 @@
+# stop the embedded yara rules from killing rust-analyzer with hammers
+[procMacro]
+enable = true
+[procMacro.ignored]
+rust-embed = ["Embed"]
