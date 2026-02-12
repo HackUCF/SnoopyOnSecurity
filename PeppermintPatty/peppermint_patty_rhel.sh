@@ -9,10 +9,10 @@ sed -i "s/SecRuleEngine DetectionOnly/SecRuleEngine On/g" /etc/httpd/conf.d/mod_
 sed -i "s/SecAuditLogParts [A-Z]*/SecAuditLogParts ABCEFHJKZ/g" /etc/httpd/conf.d/mod_security.conf
 echo "SecAuditLogFormat JSON" >> /etc/httpd/conf.d/mod_security.conf
 
-wget https://github.com/coreruleset/coreruleset/archive/refs/tags/v4.10.0.tar.gz
-tar -xvf v4.10.0.tar.gz 
-rm v4.10.0.tar.gz
-mv coreruleset-4.10.0 /etc/httpd/modsecurity-crs
+wget https://github.com/coreruleset/coreruleset/archive/refs/tags/v4.23.0.tar.gz
+tar -xvf v4.23.0.tar.gz 
+rm v4.23.0.tar.gz
+mv coreruleset-4.23.0 /etc/httpd/modsecurity-crs
 cp /etc/httpd/modsecurity-crs/crs-setup.conf.example /etc/httpd/modsecurity-crs/crs-setup.conf
 
 semanage fcontext -a -t httpd_config_t "/etc/httpd/modsecurity-crs(/.*)?"
