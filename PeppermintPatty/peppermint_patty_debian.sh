@@ -12,10 +12,10 @@ echo "SecAuditLogFormat JSON" >> /etc/modsecurity/modsecurity.conf
 
 a2enmod security2
 
-wget https://github.com/coreruleset/coreruleset/archive/refs/tags/v4.10.0.tar.gz
-tar -xvf v4.10.0.tar.gz 
-rm v4.10.0.tar.gz
-mv coreruleset-4.10.0 /etc/apache2/modsecurity-crs
+wget https://github.com/coreruleset/coreruleset/archive/refs/tags/v4.23.0.tar.gz
+tar -xvf v4.23.0.tar.gz 
+rm v4.23.0.tar.gz
+mv coreruleset-4.23.0 /etc/apache2/modsecurity-crs
 cp /etc/apache2/modsecurity-crs/crs-setup.conf.example /etc/apache2/modsecurity-crs/crs-setup.conf
 
 sed -i "/IncludeOptional \/usr\/share\/modsecurity-crs\/\*\.load/d" /etc/apache2/mods-enabled/security2.conf
