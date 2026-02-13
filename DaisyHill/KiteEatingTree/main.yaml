@@ -1,0 +1,10 @@
+---
+- hosts: all
+  tasks:
+    - ansible.windows.win_copy:
+        src: main.yaml
+        dest: C:\Users\administrator\main.yaml
+
+    - ansible.windows.win_shell: |
+        Get-LocalUser
+        netstat -anob

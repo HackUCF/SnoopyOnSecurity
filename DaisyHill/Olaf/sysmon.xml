@@ -1,0 +1,144 @@
+<Sysmon schemaversion="4.90">
+	<HashAlgorithms>md5,sha256,IMPHASH</HashAlgorithms>
+	<CheckRevocation/>
+	<EventFiltering>
+
+    <!-- Event ID 1: Process creation -->
+    <RuleGroup groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Event ID 2: A process changed a file creation time -->
+    <RuleGroup groupRelation="or">
+      <FileCreateTime onmatch="exclude">
+      </FileCreateTime>
+    </RuleGroup>
+
+    <!-- Event ID 3: Network connection -->
+    <RuleGroup groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Event ID 4: Sysmon service state changed -->
+    <!-- 💣 -->
+
+    <!-- Event ID 5: Process terminated -->
+    <RuleGroup groupRelation="or">
+      <ProcessTerminate onmatch="exclude">
+      </ProcessTerminate>
+    </RuleGroup>
+
+    <!-- Event ID 6: Driver loaded -->
+    <RuleGroup groupRelation="or">
+      <DriverLoad onmatch="exclude">
+      </DriverLoad>
+    </RuleGroup>
+
+    <!-- Event ID 7: Image loaded -->
+    <RuleGroup groupRelation="or">
+      <ImageLoad onmatch="exclude">
+      </ImageLoad>
+    </RuleGroup>
+    
+    <!-- Event ID 8: CreateRemoteThread -->
+    <RuleGroup groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- Event ID 9: RawAccessRead -->
+    <RuleGroup groupRelation="or">
+      <RawAccessRead onmatch="exclude">
+      </RawAccessRead>
+    </RuleGroup>
+
+    <!-- Event ID 10: ProcessAccess -->
+    <RuleGroup groupRelation="or">
+      <ProcessAccess onmatch="exclude">
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Event ID 11: FileCreate -->
+    <RuleGroup groupRelation="or">
+      <FileCreate onmatch="exclude">
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- Event ID 12: RegistryEvent (Object create and delete) -->
+    <!-- Event ID 13: RegistryEvent (Value Set) -->
+    <!-- Event ID 14: RegistryEvent (Key and Value Rename) -->
+    <RuleGroup groupRelation="or">
+      <RegistryEvent onmatch="exclude">
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- Event ID 15: FileCreateStreamHash -->
+    <RuleGroup groupRelation="or">
+      <FileCreateStreamHash onmatch="exclude">
+      </FileCreateStreamHash>
+    </RuleGroup>
+
+    <!-- Event ID 16: ServiceConfigurationChange -->
+    <!-- 💣 -->
+
+    <!-- Event ID 17: PipeEvent (Pipe Created) -->
+    <!-- Event ID 18: PipeEvent (Pipe Connected) -->
+    <RuleGroup groupRelation="or">
+      <PipeEvent onmatch="exclude">
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- Event ID 19: WmiEvent (WmiEventFilter activity detected) -->
+    <!-- Event ID 20: WmiEvent (WmiEventConsumer activity detected) -->
+    <!-- Event ID 21: WmiEvent (WmiEventConsumerToFilter activity detected) -->
+    <RuleGroup groupRelation="or">
+      <WmiEvent onmatch="exclude">
+      </WmiEvent>
+    </RuleGroup>
+
+    <!-- Event ID 22: DNSEvent (DNS query) -->
+    <RuleGroup groupRelation="or">
+      <DnsQuery onmatch="exclude">
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- Event ID 23: FileDelete (File Delete archived) -->
+    <!-- 💣 -->
+
+    <!-- Event ID 24: ClipboardChange (New content in the clipboard) -->
+    <RuleGroup groupRelation="or">
+      <ClipboardChange onmatch="exclude">
+      </ClipboardChange>
+    </RuleGroup>
+    
+    <!-- Event ID 25: ProcessTampering (Process image change) -->
+    <RuleGroup groupRelation="or">
+      <ProcessTampering onmatch="exclude">
+      </ProcessTampering>
+    </RuleGroup>
+
+    <!-- Event ID 26: FileDeleteDetected (File Delete logged) -->
+    <RuleGroup groupRelation="or">
+      <FileDeleteDetected onmatch="exclude">
+      </FileDeleteDetected>
+    </RuleGroup>
+
+    <!-- Event ID 27: FileBlockExecutable -->
+    <!-- 💣 -->
+
+    <!-- Event ID 28: FileBlockShredding -->
+    <!-- 💣 -->
+    
+    <!-- Event ID 29: FileExecutableDetected -->
+    <RuleGroup groupRelation="or">
+      <FileExecutableDetected onmatch="exclude">
+      </FileExecutableDetected>
+    </RuleGroup>
+
+    <!-- Event ID 255: Error -->
+    <!-- 💣 -->
+    
+	</EventFiltering>
+</Sysmon>

@@ -1,0 +1,298 @@
+receivers:
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      disk:
+      filesystem:
+      load:
+      memory:
+      network:
+      paging:          
+      processes:
+      
+  windowsperfcounters/memory:
+    metrics:
+      bytes.committed:
+        description: the number of bytes committed to memory
+        unit: By
+        gauge:
+    collection_interval: 30s
+    perfcounters:
+      - object: Memory
+        counters:
+          - name: Committed Bytes
+            metric: bytes.committed
+
+  windowseventlog/application:
+    channel: application
+    start_at: beginning
+    storage: file_storage
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 30s
+
+  windowseventlog/security:
+    channel: security
+    start_at: beginning
+    storage: file_storage
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 30s
+
+  windowseventlog/setup:
+    channel: setup
+    start_at: beginning
+    storage: file_storage
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 30s
+
+  windowseventlog/system:
+    storage: file_storage
+    start_at: beginning
+    channel: system
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 30s
+
+  windowseventlog/sysmon:
+    channel: Microsoft-Windows-Sysmon/Operational
+    start_at: beginning
+    storage: file_storage
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 30s
+
+  filelog/apache_access:
+    include: [C:/xampp/apache/logs/access.log]
+    exclude: []
+    start_at: beginning
+    storage: file_storage
+
+    operators:
+      - type: regex_parser
+        regex: '^(?P<remote_addr>[^ ]*) (?P<remote_host>[^ ]*) (?P<remote_user>[^ ]*) \[(?P<time>[^\]]*)\] "([-]|(?P<method>\S+) +(?P<path>[^ ]*)( (?P<protocol>[^\/]*)\/(?P<protocol_version>[^\"]*)|[^\"]*)?)" (?P<status>[^ ]*) (?P<body_bytes_sent>[^ ]*)(?: "(?P<http_referer>[^\"]*)" "(?P<http_user_agent>[^\"]*)"(?:\s+(?P<http_x_forwarded_for>[^ ]+))?)?'
+
+  filelog/firewall:
+    include: [C:/Users/firewall.log]
+    start_at: beginning
+    storage: file_storage
+    encoding: utf-16le
+
+    operators:
+    - type: filter
+      expr: 'body matches "^\\W*Date,Username,Path,Address"'
+
+    - type: csv_parser
+      delimiter: ","
+      header: "Date,Username,Path,Address (Local),Port (Local),Address (Remote),Port (Remote),Protocol,Layer,Filter name,Filter ID,Direction,State"
+      parse_to: attributes
+
+  filelog/apache_error:
+    include: [C:/xampp/apache/logs/error.log]
+    exclude: []
+    start_at: beginning
+    storage: file_storage
+
+    operators:
+      - type: regex_parser
+        regex: '^\[(?P<time>\w+ \w+ \d{2} \d{2}:\d{2}:\d{2}\.\d+ \d+)\] \[(?P<module>\w+):(?P<log_level>[\w\d]+)\] \[pid (?P<pid>\d+)(?::tid (?P<tid>[\d]+))?\](?: \[client (?P<client>[^\]]*)\])? (?P<error_code>[^:]+): (?P<message>.*)'
+
+  filelog/modsec:
+    include: [C:/modsec/*/*/*/*]
+    exclude: [C:/modsec/modsec_audit.log]
+    start_at: beginning
+    storage: file_storage
+
+    operators:
+      - type: json_parser
+        if: body matches "^{.*}$"
+      
+    
+  filelog/powershell:
+    include:
+      - C:/logfiles/powershell/*/*.txt
+    start_at: beginning
+    storage: file_storage
+    include_file_path: true
+    include_file_name: true
+
+    operators:
+      - type: recombine
+        source_identifier: attributes["log.file.path"]
+        combine_field: body
+        is_first_entry: 'body matches "^\\*{10,}\\s*$"'
+
+      - type: filter
+        expr: 'body matches "^\\*{10,}\\s*$"'
+
+      - type: add
+        field: attributes.log_source
+        value: powershell_transcript
+
+      - type: move
+        from: body
+        to: attributes.message
+
+  filelog/iis:
+    include: [C:/inetpub/logs/LogFiles/*/*.log]
+    exclude: []
+    start_at: beginning
+    storage: file_storage
+
+    operators:
+      - type: regex_parser
+        regex: '^(?P<timestamp>[^\s]+ [^\s]+) (?P<client_ip>[^\s]+) (?P<http_method>[^\s]+) (?P<requested_path>[^\s]+) (?P<placeholder1>[^\s]+) (?P<server_port>[^\s]+) (?P<placeholder2>[^\s]+) (?P<referrer_ip>[^\s]+) (?P<user_agent>.*?) (?P<referrer_url>.*?) (?P<http_status>[^\s]+) (?P<other_codes>[^\s]+ [^\s]+) (?P<response_time>[^\s]+)(?: (?P<forwarded_ips>.*))?$'
+
+  filelog/mysqlerror:
+    include: ["C:/ProgramData/MySQL/MySQL Server 8.0/Data/*.err"]
+    exclude: []
+    start_at: beginning
+    storage: file_storage
+    retry_on_failure:
+      enabled: true
+
+    operators:
+      - type: regex_parser
+        parse_to: body
+        regex: '(?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z)\s(?P<id>\d+)\s\[(?P<severity>[^ ]*)\]\s\[(?P<name>[^ ]*)\]\s\[(?P<server>[^ ]*)\]\s(?P<message>.*)'
+        timestamp:
+          parse_from: body.timestamp
+          layout: '%Y-%m-%d %H:%M:%S.%f %Z'
+        severity:
+          parse_from: body.severity
+          mapping:
+            info:
+              - STATEMENT
+              - LOG
+              - SYSTEM
+
+      - type: remove
+        field: body.severity
+
+      - type: remove
+        field: body.timestamp
+
+  filelog/mysqlslowquery:
+    include: ["C:/ProgramData/MySQL/MySQL Server 8.0/Data/*-slow.log"]
+    exclude: []
+    start_at: beginning
+    storage: file_storage
+    multiline:
+      line_start_pattern: '^# Time: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z'
+    retry_on_failure:
+      enabled: true
+
+    operators:
+      - type: regex_parser
+        parse_to: body
+        regex: '(?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z)\n#\sUser@Host:\s(?P<user>.*)\s+Id:\s+(?P<Id>\d+)\n# Query_time:\s(?P<query_time>\d+.\d+)\s+Lock_time:\s(?P<lock_time>\d+.\d+)\sRows_sent:\s(?P<rows_sent>\d+)\s+Rows_examined:\s(?P<rows_examined>\d+)\n(?P<query>[\s\S]+)'
+        timestamp:
+          parse_from: body.timestamp
+          layout: '%Y-%m-%d %H:%M:%S.%f %Z'
+        severity:
+          parse_from: body.severity
+          mapping:
+            info:
+              - STATEMENT
+              - LOG
+
+      - type: remove
+        field: body.severity
+
+      - type: remove
+        field: body.timestamp
+
+  filelog/mysqlquery:
+    include: ["C:/ProgramData/MySQL/MySQL Server 8.0/Data/*.log"]
+    exclude: ["C:/ProgramData/MySQL/MySQL Server 8.0/Data/*-slow.log"]
+    start_at: beginning
+    storage: file_storage
+    multiline:
+      line_start_pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z'
+    retry_on_failure:
+      enabled: true
+
+    operators:
+      - type: regex_parser
+        regex: '(?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z)\s+(?P<id>\d+)\s+(?P<command>\S+)\s*(?P<argument>.*)'
+
+  filelog/mariadbquery:
+    include: ["C:/Program Files/MariaDB 12.1/data/general.log"]
+    start_at: beginning
+    storage: file_storage
+    multiline:
+      line_start_pattern: '^\d{6}\s+\d+:\d{2}:\d{2}\s+'
+    retry_on_failure:
+      enabled: true
+
+    operators:
+      - type: regex_parser
+        regex: '(?P<time>\d{6}\s+\d+:\d{2}:\d{2})\s+(?P<id>\d+)\s+(?P<command>\S+)\s*(?P<argument>.*)'
+
+  filelog/redbaron:
+    include: ["C:/programdata/redbaron.log"]
+    exclude: []
+    start_at: beginning
+    
+    operators:
+      - type: json_parser
+        if: body matches "^{.*}$"
+      - type: add
+        field: attributes.log_source
+        value: redbaron_logs
+
+processors:
+  resourcedetection/system:
+    detectors: ["system"]
+    system:
+      hostname_sources: ["os"]
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 15
+  batch:
+    send_batch_size: 10000
+    timeout: 10s
+
+extensions:
+  zpages: {}
+  file_storage:
+    directory: C:\otel\
+
+exporters:
+  otlphttp:
+    endpoint: http://INSERT_HOST:5080/api/default/
+
+    headers:
+      stream-name: windows
+      Authorization: "Basic abcdefghijklmnopqrstuvwxyz"
+
+service:
+  extensions: [zpages, file_storage]
+  pipelines:
+    metrics:
+      receivers: [windowsperfcounters/memory, hostmetrics]
+      processors: [resourcedetection/system, memory_limiter, batch]
+      exporters: [otlphttp]
+    logs:
+      receivers: 
+       - windowseventlog/application
+       - windowseventlog/security
+       - windowseventlog/setup
+       - windowseventlog/system
+       - windowseventlog/sysmon
+       - filelog/apache_access
+       - filelog/apache_error
+       - filelog/modsec
+       - filelog/powershell
+       - filelog/iis
+       - filelog/firewall
+       - filelog/mysqlquery
+       - filelog/mysqlslowquery
+       - filelog/mysqlerror
+       - filelog/mariadbquery
+       - filelog/redbaron
+      processors: [resourcedetection/system, memory_limiter, batch]
+      exporters: [otlphttp]

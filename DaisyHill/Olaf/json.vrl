@@ -1,0 +1,15 @@
+if exists(.body_event_data_data) {
+    loaded_data = parse_json!(.body_event_data_data)
+
+    if is_array(loaded_data) {
+        for_each(array!(loaded_data)) -> |_index, item| {
+            for_each(object!(item)) -> |key, value| {
+                prefixed_key = "flat_event_data_" + key
+                . = set!(., [prefixed_key], value)
+            }
+        }
+    }
+
+    del(.body_event_data_data) 
+} 
+ .
