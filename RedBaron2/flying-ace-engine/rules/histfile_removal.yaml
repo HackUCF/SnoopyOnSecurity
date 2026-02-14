@@ -1,0 +1,16 @@
+name: histfile_removal
+mode: alert
+eval: |
+  (
+    (
+      e.process_name == "rm" ||
+      e.process_name == "shred" ||
+      e.process_name == "truncate" ||
+      e.process_name == "unset"
+    ) &&
+    (
+      e.process_args.contains("._history") ||
+      e.process_args.contains(".viminfo") ||
+      e.process_args.contains("HISTFILE")
+    )
+  )

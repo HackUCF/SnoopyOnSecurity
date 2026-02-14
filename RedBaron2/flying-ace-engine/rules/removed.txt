@@ -1,0 +1,3 @@
+sigma_file_and_directory_discovery.yaml
+sigma_crypto_mining.yaml
+sigma_system_info_discovery.yaml

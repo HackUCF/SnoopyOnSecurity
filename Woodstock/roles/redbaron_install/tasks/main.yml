@@ -1,0 +1,143 @@
+---
+- name: Copy red baron binary
+  ansible.builtin.copy:
+    src: "{{ red_baron_location }}"
+    dest: /usr/local/bin/rb2
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Fix selinux context
+  ansible.builtin.command:
+    cmd: restorecon -v /usr/local/bin/rb2
+  changed_when: true
+  when: ansible_selinux.status is defined and ansible_selinux.status == "enabled"
+
+- name: Generate config
+  ansible.builtin.command: /usr/local/bin/rb2 -c
+  args:
+    creates: /etc/rb2.yaml
+
+- name: Read rb2 config
+  ansible.builtin.slurp:
+    path: /etc/rb2.yaml
+  register: redbaron_install_config_raw
+
+- name: Parse rb2 config
+  ansible.builtin.set_fact:
+    redbaron_install_config: "{{ redbaron_install_config_raw.content | b64decode | from_yaml }}"
+
+- name: Check for ansible_ignore flag
+  ansible.builtin.set_fact:
+    redbaron_install_ansible_ignore: "{{ redbaron_install_config.ansible_ignore | default(false) | bool }}"
+
+- name: Skip config management when ansible_ignore is set
+  ansible.builtin.debug:
+    msg: "ansible_ignore: true found in /etc/rb2.yaml on {{ inventory_hostname }} — skipping config override"
+  when: redbaron_install_ansible_ignore
+
+- name: Update rb2 features
+  ansible.builtin.set_fact:
+    redbaron_install_config: "{{ redbaron_install_config | combine({'features': redbaron_install_features}, recursive=true) }}"
+  when: not redbaron_install_ansible_ignore
+
+- name: Update firewall enforcing
+  ansible.builtin.set_fact:
+    redbaron_install_config: "{{ redbaron_install_config | combine({'firewall': redbaron_install_config.firewall | combine({'enforcing': redbaron_install_firewall_enforcing})}, recursive=true) }}"
+  when: not redbaron_install_ansible_ignore
+
+- name: copy over ssh key
+  ansible.builtin.copy:
+    src: "{{ host_safe_user_pubkey_path }}"
+    dest: "{{ redbaron_install_tty_authorized_keys }}"
+    mode: 0600
+  when: not redbaron_install_ansible_ignore
+
+- name: Update tty authorized_keys path
+  ansible.builtin.set_fact:
+    redbaron_install_config: "{{ redbaron_install_config | combine({'tty': redbaron_install_config.tty | default({}) | combine({'authorized_keys': redbaron_install_tty_authorized_keys})}, recursive=true) }}"
+  when: not redbaron_install_ansible_ignore
+
+- name: Build ingestor configuration
+  ansible.builtin.set_fact:
+    redbaron_install_ingestor_config:
+      type: "{{ redbaron_install_ingestor_type }}"
+      poll_interval_secs: "{{ redbaron_install_ingestor_poll_interval_secs }}"
+      stats_interval_secs: "{{ redbaron_install_ingestor_stats_interval_secs }}"
+      log_rollover_size_mb: "{{ redbaron_install_ingestor_log_rollover_size_mb }}"
+      openobserve:
+        url: "{{ openobserve_url | default('http://localhost:5080') }}"
+        username: "{{ openobserve_user | default('root@example.com') }}"
+        password: "{{ openobserve_password | default('Complexpass#123') }}"
+        org: "{{ redbaron_install_ingestor_org }}"
+        stream_prefix: "{{ redbaron_install_ingestor_stream_prefix }}"
+  when:
+    - not redbaron_install_ansible_ignore
+    - redbaron_install_features.ingestor | default(false)
+
+- name: Update object storage configuration
+  ansible.builtin.set_fact:
+    redbaron_install_object_storage_config:
+      access_key: "{{ minio_access_key }}"
+      secret_key: "{{ minio_secret_key }}"
+      bucket: "{{ minio_bucket }}"
+      endpoint: "{{ minio_endpoint }}"
+      region: "{{ minio_region }}"
+      path_style: "{{ minio_path_style }}"
+  when:
+    - not redbaron_install_ansible_ignore
+    - redbaron_install_features.ingestor | default(false)
+
+- name: Update yara configuration
+  ansible.builtin.set_fact:
+    redbaron_install_yara_config:
+      actions:
+        - forward_to_s3
+        - kill
+  when:
+    - not redbaron_install_ansible_ignore
+    - redbaron_install_features.ingestor | default(false)
+    - "{{ red_baron_move_binary_s3 }}"
+
+- name: Update tty s3 forwarding configuration
+  ansible.builtin.set_fact:
+    redbaron_install_tty_config:
+      forward_to_s3: "{{ red_baron_forward_to_s3 }}"
+  when:
+    - not redbaron_install_ansible_ignore
+    - redbaron_install_features.ingestor | default(false)
+
+- name: Update ingestor configuration
+  ansible.builtin.set_fact:
+    redbaron_install_config: "{{ redbaron_install_config | combine({'ingestor': redbaron_install_ingestor_config, 'object_storage': redbaron_install_object_storage_config, 'tty': redbaron_install_tty_config, 'yara': redbaron_install_yara_config}, recursive=true) }}"
+  when:
+    - not redbaron_install_ansible_ignore
+    - redbaron_install_features.ingestor | default(false)
+
+- name: Write updated rb2 config
+  ansible.builtin.copy:
+    content: "{{ redbaron_install_config | to_nice_yaml }}"
+    dest: /etc/rb2.yaml
+    mode: "0600"
+    owner: root
+    group: root
+    backup: yes
+  when: not redbaron_install_ansible_ignore
+  notify: Restart rb2
+
+- name: Generate systemd service
+  ansible.builtin.command: /usr/local/bin/rb2 -s
+  args:
+    creates: /etc/systemd/system/rb2.service
+  register: redbaron_install_systemd_result
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when: redbaron_install_systemd_result is changed
+
+- name: Enable and start red baron
+  ansible.builtin.service:
+    name: rb2
+    state: started
+    enabled: yes

@@ -1,0 +1,5 @@
+---
+- name: Restart rb2
+  ansible.builtin.service:
+    name: rb2
+    state: restarted

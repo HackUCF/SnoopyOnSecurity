@@ -1,0 +1,64 @@
+---
+- name: Check if amazon-ssm-agent service exists
+  ansible.builtin.command: systemctl list-unit-files amazon-ssm-agent.service
+  register: ssm_service_check
+  failed_when: false
+  changed_when: false
+
+- name: Stop amazon-ssm-agent service
+  ansible.builtin.systemd:
+    name: amazon-ssm-agent
+    state: stopped
+    enabled: false
+  when: ssm_service_check.rc == 0
+
+- name: Check if amazon-ssm-agent was installed via snap
+  ansible.builtin.command: snap list amazon-ssm-agent
+  register: snap_check
+  failed_when: false
+  changed_when: false
+
+- name: Remove amazon-ssm-agent snap package
+  ansible.builtin.command: snap remove amazon-ssm-agent
+  when: snap_check.rc == 0
+
+- name: Remove amazon-ssm-agent via apt (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: amazon-ssm-agent
+    state: absent
+    purge: true
+  when:
+    - snap_check.rc != 0
+    - ansible_facts['pkg_mgr'] in ['apt']
+
+- name: Remove amazon-ssm-agent via yum (RHEL/CentOS/Amazon Linux)
+  ansible.builtin.yum:
+    name: amazon-ssm-agent
+    state: absent
+  when:
+    - snap_check.rc != 0
+    - ansible_facts['pkg_mgr'] in ['yum']
+
+- name: Remove amazon-ssm-agent via dnf (Fedora/newer RHEL)
+  ansible.builtin.dnf:
+    name: amazon-ssm-agent
+    state: absent
+  when:
+    - snap_check.rc != 0
+    - ansible_facts['pkg_mgr'] in ['dnf']
+
+- name: Kill any remaining amazon-ssm-agent processes
+  ansible.builtin.command: pkill -9 -f amazon-ssm-agent
+  register: pkill_result
+  failed_when: pkill_result.rc not in [0, 1]
+  changed_when: pkill_result.rc == 0
+
+- name: Remove leftover SSM agent directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/lib/amazon/ssm
+    - /etc/amazon/ssm
+    - /usr/bin/amazon-ssm-agent
+    - /snap/amazon-ssm-agent

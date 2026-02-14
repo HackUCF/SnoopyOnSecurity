@@ -1,0 +1,35 @@
+name: ansible_usage
+mode: alert
+eval: |
+  (
+    e.process_name == "ansible" ||
+    e.process_name == "ansible-playbook" ||
+    e.process_name == "ansible-galaxy" ||
+    e.process_name == "ansible-vault" ||
+    e.process_name == "ansible-pull"
+  )
+tests:
+  - cleartext: "ansible-playbook site.yml"
+    process_name: ansible-playbook
+    process_args: "ansible-playbook site.yml"
+    should_match: true
+  - cleartext: "ansible all -m ping"
+    process_name: ansible
+    process_args: "ansible all -m ping"
+    should_match: true
+  - cleartext: "ansible-galaxy install geerlingguy.docker"
+    process_name: ansible-galaxy
+    process_args: "ansible-galaxy install geerlingguy.docker"
+    should_match: true
+  - cleartext: "ansible-vault encrypt secrets.yml"
+    process_name: ansible-vault
+    process_args: "ansible-vault encrypt secrets.yml"
+    should_match: true
+  - cleartext: "ansible-pull -U https://git.example.com/playbooks.git"
+    process_name: ansible-pull
+    process_args: "ansible-pull -U https://git.example.com/playbooks.git"
+    should_match: true
+  - cleartext: "python3 ansible_helper.py"
+    process_name: python3
+    process_args: "python3 ansible_helper.py"
+    should_match: false

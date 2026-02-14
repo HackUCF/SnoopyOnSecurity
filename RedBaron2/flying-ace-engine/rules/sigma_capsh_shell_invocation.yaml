@@ -1,0 +1,6 @@
+name: sigma_capsh_shell_invocation
+mode: alert
+eval: |
+  (
+    e.process_name == "capsh" && e.process_args.ends_with(" --")
+  )

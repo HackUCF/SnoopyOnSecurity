@@ -1,0 +1,6 @@
+name: sigma_iptables_flush_ufw
+mode: alert
+eval: |
+  (
+    ((e.process_name == "iptables" || e.process_name == "xtables-legacy-multi" || e.process_name == "iptables-legacy-multi" || e.process_name == "ip6tables" || e.process_name == "ip6tables-legacy-multi")) && ((e.process_args.contains("-F") || e.process_args.contains("-Z") || e.process_args.contains("-X"))) && ((e.process_args.contains("ufw-logging-deny") || e.process_args.contains("ufw-logging-allow") || e.process_args.contains("ufw6-logging-deny") || e.process_args.contains("ufw6-logging-allow")))
+  )

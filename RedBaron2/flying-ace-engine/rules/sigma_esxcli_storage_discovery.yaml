@@ -1,0 +1,6 @@
+name: sigma_esxcli_storage_discovery
+mode: alert
+eval: |
+  (
+    (e.process_name == "esxcli" && e.process_args.contains("storage")) && ((e.process_args.contains(" get") || e.process_args.contains(" list")))
+  )

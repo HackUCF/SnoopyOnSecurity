@@ -1,0 +1,59 @@
+name: bash_c_execution
+mode: alert
+eval: |
+  (
+    (e.process_name == "bash" || e.process_name == "sh" || e.process_name == "dash") &&
+    re_match(e.process_args, "\\s-c\\s") &&
+    e.process_pname != "sshd" &&
+    e.process_pname != "cron" &&
+    e.process_pname != "crond" &&
+    e.process_pname != "systemd" &&
+    e.process_pname != "run-parts" &&
+    !re_match(e.process_args, "(run-parts|update-motd|HISTFILE|echo \\$SHELL)")
+  )
+tests:
+  - cleartext: "bash -c 'whoami'"
+    process_name: bash
+    process_args: "bash -c whoami"
+    process_pname: bash
+    should_match: true
+  - cleartext: "sh -c 'id'"
+    process_name: sh
+    process_args: "sh -c id"
+    process_pname: bash
+    should_match: true
+  - cleartext: "bash -c 'cat /etc/shadow'"
+    process_name: bash
+    process_args: "bash -c cat /etc/shadow"
+    process_pname: python3
+    should_match: true
+  - cleartext: "bash --norc script.sh (no -c flag)"
+    process_name: bash
+    process_args: "bash --norc script.sh"
+    process_pname: bash
+    should_match: false
+  - cleartext: "python3 -c 'print(1)' (not bash/sh)"
+    process_name: python3
+    process_args: "python3 -c print(1)"
+    should_match: false
+  - cleartext: "sshd runs MOTD via sh -c (system noise)"
+    process_name: sh
+    process_args: "sh -c -- /usr/bin/env -i PATH=/usr/local/sbin:/usr/local/bin run-parts --lsbsysinit /etc/update-motd.d"
+    process_pname: sshd
+    user_id: 0
+    should_match: false
+  - cleartext: "sshd internal: bash -c echo $SHELL"
+    process_name: bash
+    process_args: "bash -c echo $SHELL"
+    process_pname: sshd
+    should_match: false
+  - cleartext: "sshd internal: bash -c HISTFILE history sync"
+    process_name: bash
+    process_args: "bash -c HISTZISE=10000; HISTFILE=~/.bash_history; history"
+    process_pname: sshd
+    should_match: false
+  - cleartext: "cron runs: sh -c /usr/local/bin/backup.sh"
+    process_name: sh
+    process_args: "sh -c /usr/local/bin/backup.sh"
+    process_pname: cron
+    should_match: false

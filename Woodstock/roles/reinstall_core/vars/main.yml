@@ -1,0 +1,46 @@
+---
+reinstall_core_debian_reinstall_packages:
+  - libpam-runtime
+  - libpam0g
+  - login
+  - passwd
+  - sudo
+  - util-linux
+  - procps
+  - e2fsprogs
+  - attr
+  - bash
+  - iptables
+  - openssh-client
+  - openssh-server
+reinstall_core_rhel_reinstall_packages:
+  - pam
+  - procps-ng
+  - kbd
+  - passwd
+  - polkit
+  - sssd-common
+  - sudo
+  - systemd
+  - e2fsprogs
+  - attr
+  - bash
+  - iptables
+  - openssh-clients
+  - openssh-server
+reinstall_core_alpine_packages:
+  - pam
+  - procps
+  - e2fsprogs
+  - attr
+  - bash
+  - iptables
+  - openssh
+reinstall_core_suse_reinstall_packages:
+  - pam
+  - procps
+  - e2fsprogs
+  - attr
+  - bash
+  - iptables
+  - openssh

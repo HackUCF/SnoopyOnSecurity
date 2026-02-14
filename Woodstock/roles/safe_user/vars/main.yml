@@ -1,0 +1,4 @@
+---
+# safe_user_name is defined in group_vars/all.yml
+safe_user_shell: /bin/bash
+safe_user_pubkey: ""

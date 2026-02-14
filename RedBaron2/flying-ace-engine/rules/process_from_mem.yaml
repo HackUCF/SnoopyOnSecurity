@@ -1,0 +1,36 @@
+name: process_from_memory
+mode: alert
+eval: |
+  (
+    re_match(e.process_executable, "/proc/self/fd/") ||
+    re_match(e.process_executable, "/proc/\\d+/fd/") ||
+    re_match(e.process_executable, "/dev/shm/") ||
+    re_match(e.process_executable, "/memfd:") ||
+    re_match(e.process_executable, "memfd:")
+  )
+tests:
+  - cleartext: "process executed from /proc/self/fd/3 (memfd_create)"
+    process_name: payload
+    process_executable: "/proc/self/fd/3"
+    process_args: "payload"
+    should_match: true
+  - cleartext: "process executed from /proc/1234/fd/5"
+    process_name: exploit
+    process_executable: "/proc/1234/fd/5"
+    process_args: "exploit"
+    should_match: true
+  - cleartext: "process executed from /dev/shm/dropper"
+    process_name: dropper
+    process_executable: "/dev/shm/dropper"
+    process_args: "dropper"
+    should_match: true
+  - cleartext: "process executed from memfd:anonymous"
+    process_name: anon
+    process_executable: "/memfd:anonymous"
+    process_args: "anon"
+    should_match: true
+  - cleartext: "/usr/bin/ls (normal binary)"
+    process_name: ls
+    process_executable: "/usr/bin/ls"
+    process_args: "ls -la"
+    should_match: false

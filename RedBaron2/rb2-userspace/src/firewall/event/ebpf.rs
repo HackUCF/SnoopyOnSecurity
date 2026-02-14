@@ -1,4 +1,4 @@
-use crate::firewall::common::{EventProducer, FirewallEvent};
+use crate::firewall::{EventProducer, FirewallEvent};
 use async_trait::async_trait;
 use aya::maps::perf::AsyncPerfEventArray;
 use aya::programs::TracePoint;
@@ -7,6 +7,7 @@ use aya::{Btf, EbpfLoader, Endianness};
 use bytes::BytesMut;
 use log::{debug, error, warn};
 use std::mem::{MaybeUninit, size_of};
+use std::net::{Ipv4Addr, Ipv6Addr};
 use std::path::PathBuf;
 use tokio::sync::mpsc;
 use tokio::time::Duration;
@@ -29,33 +30,58 @@ impl EventProducer for EbpfEventProducer {
                 "/firewall_events.bpf.o"
             )))?;
 
-        let prog: &mut TracePoint = ebpf
-            .program_mut("tp_sys_enter_connect")
-            .unwrap()
-            .try_into()?;
-        prog.load()?;
-        prog.attach("syscalls", "sys_enter_connect")?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_enter_connect",
+            "syscalls",
+            "sys_enter_connect",
+        )?;
+        attach_tp(&mut ebpf, "tp_sys_enter_bind", "syscalls", "sys_enter_bind")?;
 
-        let prog: &mut TracePoint = ebpf
-            .program_mut("tp_sys_enter_sendto")
-            .unwrap()
-            .try_into()?;
-        prog.load()?;
-        prog.attach("syscalls", "sys_enter_sendto")?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_enter_accept",
+            "syscalls",
+            "sys_enter_accept",
+        )?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_exit_accept",
+            "syscalls",
+            "sys_exit_accept",
+        )?;
 
-        let prog: &mut TracePoint = ebpf
-            .program_mut("tp_sys_enter_sendmsg")
-            .unwrap()
-            .try_into()?;
-        prog.load()?;
-        prog.attach("syscalls", "sys_enter_sendmsg")?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_enter_accept4",
+            "syscalls",
+            "sys_enter_accept4",
+        )?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_exit_accept4",
+            "syscalls",
+            "sys_exit_accept4",
+        )?;
 
-        let prog: &mut TracePoint = ebpf
-            .program_mut("tp_sys_enter_sendmmsg")
-            .unwrap()
-            .try_into()?;
-        prog.load()?;
-        prog.attach("syscalls", "sys_enter_sendmmsg")?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_enter_sendto",
+            "syscalls",
+            "sys_enter_sendto",
+        )?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_enter_sendmsg",
+            "syscalls",
+            "sys_enter_sendmsg",
+        )?;
+        attach_tp(
+            &mut ebpf,
+            "tp_sys_enter_sendmmsg",
+            "syscalls",
+            "sys_enter_sendmmsg",
+        )?;
 
         let events_map = ebpf.take_map("events").ok_or_else(|| {
             std::io::Error::new(std::io::ErrorKind::NotFound, "events perf array not found")
@@ -63,13 +89,11 @@ impl EventProducer for EbpfEventProducer {
 
         let mut perf = AsyncPerfEventArray::try_from(events_map)?;
 
-        // Spawn one task per CPU.
         for cpu_id in online_cpus().map_err(|(_, e)| e)? {
             let mut buf = perf.open(cpu_id, None)?;
             let tx = tx.clone();
 
             tokio::spawn(async move {
-                // Multiple scratch buffers per read to batch events.
                 let mut bufs: Vec<BytesMut> =
                     (0..16).map(|_| BytesMut::with_capacity(1024)).collect();
 
@@ -92,16 +116,14 @@ impl EventProducer for EbpfEventProducer {
                             }
                         };
 
-                        debug!("perf firewall_event pid={}", ev.pid);
+                        debug!(
+                            "perf firewall_event pid={} op={} fam={} dport={}",
+                            ev.pid, ev.op, ev.family, ev.dport
+                        );
 
-                        if tx
-                            .send(FirewallEvent {
-                                pid: ev.pid,
-                                context: comm_to_string(&ev.comm),
-                            })
-                            .await
-                            .is_err()
-                        {
+                        let fev = build_fw_event(&ev);
+
+                        if tx.send(fev).await.is_err() {
                             error!(
                                 "firewall event receiver dropped; stopping event recording on cpu {}",
                                 cpu_id
@@ -116,11 +138,17 @@ impl EventProducer for EbpfEventProducer {
         }
         drop(tx);
 
-        // Run forever
         loop {
             tokio::time::sleep(Duration::from_secs(24 * 60 * 60)).await;
         }
     }
+}
+
+fn attach_tp(ebpf: &mut aya::Ebpf, prog_name: &str, cat: &str, tp: &str) -> anyhow::Result<()> {
+    let p: &mut TracePoint = ebpf.program_mut(prog_name).unwrap().try_into()?;
+    p.load()?;
+    p.attach(cat, tp)?;
+    Ok(())
 }
 
 fn comm_to_string(comm: &[u8; 16]) -> Option<String> {
@@ -131,22 +159,55 @@ fn comm_to_string(comm: &[u8; 16]) -> Option<String> {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct AllowEvent {
-    pid: u32,
+struct Event {
+    pid: i32,
+    op: u32,
+    family: u16,
+    dport: u16,
     comm: [u8; 16],
+    addr: [u8; 16], // union size
 }
 
-fn parse_event(buf: &[u8]) -> Option<AllowEvent> {
-    let need = size_of::<AllowEvent>();
+fn parse_event(buf: &[u8]) -> Option<Event> {
+    let need = size_of::<Event>();
     if buf.len() < need {
         warn!("perf record too small: got {}, need {}", buf.len(), need);
         return None;
     }
 
-    let mut uninit = MaybeUninit::<AllowEvent>::uninit();
+    let mut uninit = MaybeUninit::<Event>::uninit();
     unsafe {
-        let dst = uninit.as_mut_ptr() as *mut u8;
-        std::ptr::copy_nonoverlapping(buf.as_ptr(), dst, need);
+        std::ptr::copy_nonoverlapping(buf.as_ptr(), uninit.as_mut_ptr() as *mut u8, need);
         Some(uninit.assume_init())
+    }
+}
+
+fn addr_to_string(ev: &Event) -> Option<String> {
+    match ev.family as i32 {
+        2 => Some(Ipv4Addr::from([ev.addr[0], ev.addr[1], ev.addr[2], ev.addr[3]]).to_string()),
+        10 => Some(Ipv6Addr::from(ev.addr).to_string()),
+        _ => None,
+    }
+}
+
+fn op_to_str(op: u32) -> &'static str {
+    match op {
+        1 => "connect",
+        2 => "sendto",
+        3 => "sendmsg",
+        4 => "sendmmsg",
+        5 => "accept",
+        6 => "bind",
+        _ => "unknown",
+    }
+}
+
+fn build_fw_event(ev: &Event) -> FirewallEvent {
+    FirewallEvent {
+        pid: ev.pid,
+        comm: comm_to_string(&ev.comm),
+        dport: Some(ev.dport),
+        ip: addr_to_string(ev),
+        op: Some(op_to_str(ev.op).to_string()),
     }
 }

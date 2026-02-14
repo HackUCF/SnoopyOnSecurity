@@ -1,0 +1,61 @@
+---
+- name: Load safe public key from file when not provided directly
+  ansible.builtin.set_fact:
+    safe_user_pubkey_effective: >-
+      {{ safe_user_pubkey if (safe_user_pubkey | length > 0)
+      else lookup('ansible.builtin.file', safe_user_pubkey_path, errors='ignore') }}
+
+- name: Fail if safe public key is empty
+  ansible.builtin.fail:
+    msg: >-
+      safe public key is empty. Set `safe_user_pubkey` or provide a valid
+      `safe_user_pubkey_path` (current: {{ safe_user_pubkey_path }}).
+  when: safe_user_pubkey_effective | trim | length == 0
+
+- name: Check whether sudo group exists
+  ansible.builtin.command: getent group sudo
+  register: safe_user_sudo_group
+  changed_when: false
+  failed_when: false
+
+- name: Check whether wheel group exists
+  ansible.builtin.command: getent group wheel
+  register: safe_user_wheel_group
+  changed_when: false
+  failed_when: false
+
+- name: Choose admin group when present
+  ansible.builtin.set_fact:
+    safe_user_admin_group: >-
+      {{ 'sudo' if safe_user_sudo_group.rc == 0
+      else ('wheel' if safe_user_wheel_group.rc == 0 else '') }}
+
+- name: Ensure safe user exists
+  ansible.builtin.user:
+    name: "{{ safe_user_name }}"
+    shell: "{{ safe_user_shell }}"
+    create_home: true
+    state: present
+
+- name: Add safe user to admin group when available
+  ansible.builtin.user:
+    name: "{{ safe_user_name }}"
+    groups: "{{ safe_user_admin_group }}"
+    append: true
+  when: safe_user_admin_group | length > 0
+
+- name: Install safe user's authorized key
+  ansible.posix.authorized_key:
+    user: "{{ safe_user_name }}"
+    key: "{{ safe_user_pubkey_effective }}"
+    state: present
+    manage_dir: true
+
+- name: Grant passwordless sudo to safe user
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/90-{{ safe_user_name }}"
+    content: "{{ safe_user_name }} ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"

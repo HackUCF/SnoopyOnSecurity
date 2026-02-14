@@ -1,0 +1,59 @@
+name: root_ssh_login
+mode: alert
+eval: |
+  (
+    e.process_pname == "sshd" &&
+    e.user_id == 0 &&
+    e.user_name == "root" &&
+    (
+      e.process_name == "bash" ||
+      e.process_name == "sh" ||
+      e.process_name == "zsh" ||
+      e.process_name == "fish" ||
+      e.process_name == "dash"
+    ) &&
+    !re_match(e.process_args, "\\s-c\\s")
+  )
+tests:
+  - cleartext: "root logs in via SSH -> sshd spawns bash as uid 0"
+    process_name: bash
+    process_args: "-bash"
+    process_pname: sshd
+    user_id: 0
+    user_name: root
+    should_match: true
+  - cleartext: "root logs in via SSH -> sshd spawns zsh as uid 0"
+    process_name: zsh
+    process_args: "-zsh"
+    process_pname: sshd
+    user_id: 0
+    user_name: root
+    should_match: true
+  - cleartext: "normal user logs in via SSH -> sshd spawns bash as uid 1000"
+    process_name: bash
+    process_args: "-bash"
+    process_pname: sshd
+    user_id: 1000
+    user_name: ubuntu
+    should_match: false
+  - cleartext: "root runs bash locally (no sshd parent)"
+    process_name: bash
+    process_args: "-bash"
+    process_pname: bash
+    user_id: 0
+    user_name: root
+    should_match: false
+  - cleartext: "sshd runs MOTD scripts as root (sh -c, not a login)"
+    process_name: sh
+    process_args: "sh -c -- /usr/bin/env -i PATH=/usr/local/sbin:/usr/local/bin run-parts --lsbsysinit /etc/update-motd.d"
+    process_pname: sshd
+    user_id: 0
+    user_name: root
+    should_match: false
+  - cleartext: "sshd runs internal command as root via bash -c"
+    process_name: bash
+    process_args: "bash -c echo $SHELL"
+    process_pname: sshd
+    user_id: 0
+    user_name: root
+    should_match: false

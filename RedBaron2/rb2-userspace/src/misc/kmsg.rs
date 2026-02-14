@@ -1,6 +1,7 @@
 use super::log::log_detection;
 use chrono::{DateTime, Local, SecondsFormat, TimeZone, Utc};
 use log::debug;
+use serde_json::json;
 use std::fmt;
 use std::io;
 use std::os::unix::fs::MetadataExt;
@@ -164,7 +165,12 @@ impl KmsgReader {
 
             if let Some(log) = KmsgLog::new(record.as_ref()) {
                 if check_malicious(&log.msg) {
-                    log_detection(&format!("Found malicious dmesg line: {}", log)).await;
+                    log_detection(
+                        "malicious_dmesg",
+                        &format!("{}", log),
+                        json!({ "line": log.msg }),
+                    )
+                    .await;
                 }
             } else {
                 debug!("Malformed kmsg record: {:?}", record);
@@ -251,7 +257,7 @@ impl KernLogReader {
 
             let line = line.trim_end_matches(&['\n', '\r'][..]);
             if check_malicious(line) {
-                log_detection(&format!("Found malicious kern.log line: {}", line)).await;
+                log_detection("malicious_kernlog", line, json!({ "line": line })).await;
             }
         }
     }

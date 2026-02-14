@@ -1,0 +1,6 @@
+name: sigma_av_kaspersky_av_disabled
+mode: alert
+eval: |
+  (
+    (e.process_name == "systemctl" || e.process_name == "bash" || e.process_name == "sh") && (e.process_args.contains("stop") && e.process_args.contains("kesl"))
+  )

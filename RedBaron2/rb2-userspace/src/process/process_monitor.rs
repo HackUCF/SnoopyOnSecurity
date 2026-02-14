@@ -1,12 +1,11 @@
-use crate::{config::yaml, log_file, process::helper};
+use crate::{config::yaml, process::helper};
 use aya::maps::AsyncPerfEventArray;
 use aya::programs::TracePoint;
 use aya::util::online_cpus;
 use aya::{Btf, EbpfLoader, Endianness, Pod};
 use bytes::BytesMut;
 use chrono::{SecondsFormat, TimeZone};
-#[allow(unused_imports)]
-use flying_ace_engine::{EcsRhaiEngine, ProcessEvent as EngineEvent};
+use flying_ace_engine::{EcsRhaiEngine, ProcessEvent as EngineEvent, RuleMode};
 use log::{debug, error, info, warn};
 use std::mem::{MaybeUninit, size_of};
 use std::sync::OnceLock;
@@ -16,8 +15,8 @@ use tokio::sync::mpsc;
 
 // Mirror the C headers exactly
 const TASK_COMM_LEN: usize = 16;
-const MAX_ARG_CHARS: usize = 32;
-const MAX_ARGS: usize = 8;
+const MAX_ARGS: usize = 32;
+const ARGS_BUF_SIZE: usize = 512;
 const MAX_PATH_COMPONENT_SIZE: usize = 32;
 const MAX_PATH_COMPONENTS: usize = 8;
 
@@ -63,7 +62,10 @@ fn stat_btime() -> io::Result<u64> {
 #[derive(Copy, Clone)]
 struct Args {
     argc: u32,
-    args: [[u8; MAX_ARG_CHARS]; MAX_ARGS],
+    used: u32,
+    off: [u16; MAX_ARGS],
+    len: [u16; MAX_ARGS],
+    buf: [u8; ARGS_BUF_SIZE],
 }
 unsafe impl Pod for Args {}
 
@@ -75,6 +77,7 @@ struct ProcessEvent {
     pid: u32,
     ppid: u32,
     uid: u32,
+    sid: u32,
 
     name: [u8; TASK_COMM_LEN],
     pname: [u8; TASK_COMM_LEN],
@@ -96,8 +99,21 @@ fn decode_comm(name: &[u8; TASK_COMM_LEN]) -> String {
 }
 
 fn decode_argv(argv: &Args) -> Vec<String> {
-    (0..argv.argc as usize)
-        .map(|i| nul_terminated_to_string(&argv.args[i]))
+    let argc = (argv.argc as usize).min(MAX_ARGS);
+    let used = (argv.used as usize).min(ARGS_BUF_SIZE);
+
+    (0..argc)
+        .filter_map(|i| {
+            let off = argv.off[i] as usize;
+            let len = argv.len[i] as usize;
+
+            if off >= used || len == 0 || off + len > used {
+                return None;
+            }
+
+            let slice = &argv.buf[off..off + len];
+            Some(nul_terminated_to_string(slice))
+        })
         .collect()
 }
 
@@ -146,22 +162,33 @@ pub async fn run<P: AsRef<Path>>(
 
     let mut perf = AsyncPerfEventArray::try_from(events_map)?;
 
-    // Initialize RHai engine from configured directory (fallback if unset)
-    /*
-    let engine = EcsRhaiEngine::new_from_dir(cfg.rhai_rules_dir.to_string_lossy().as_ref());
-    info!(
-        "RHAI engine initialized from directory: {}",
-        cfg.rhai_rules_dir.to_string_lossy()
-    );
-    */
+    // Initialize RHAI rule engine at startup (embedded + optional extra dir)
+    let engine = if cfg.rhai_enabled {
+        const EMBEDDED_RHAI_RULES_XZ: &[u8] =
+            include_bytes!(concat!(env!("OUT_DIR"), "/compiled_rhai_rules.xz"));
 
-    let log_file_path = cfg.log_file.clone();
-    let mut log_file = match log_file::open_log_file_async(&cfg.log_file).await {
-        Ok(f) => Some(f),
-        Err(e) => {
-            warn!("Failed to open process monitor log file: {}", e);
-            None
-        }
+        let embedded_yaml = {
+            use std::io::Read;
+            let mut decoder = xz2::read::XzDecoder::new(EMBEDDED_RHAI_RULES_XZ);
+            let mut buf = String::new();
+            if let Err(e) = decoder.read_to_string(&mut buf) {
+                warn!("Failed to decompress embedded RHAI rules: {}", e);
+            }
+            buf
+        };
+
+        let extra_dir = cfg.rhai_rules_dir.as_deref();
+        let eng = EcsRhaiEngine::new_combined(&embedded_yaml, extra_dir, &cfg.disabled_rules);
+        info!(
+            "RHAI engine initialized: {} rules loaded (extra_dir={:?}, disabled={})",
+            eng.rule_count(),
+            extra_dir,
+            cfg.disabled_rules.len(),
+        );
+        Some(eng)
+    } else {
+        info!("RHAI rule engine disabled via config (process.rhai_enabled: false)");
+        None
     };
 
     let (tx, mut rx) = mpsc::channel(128);
@@ -215,46 +242,48 @@ pub async fn run<P: AsRef<Path>>(
         if let Some(event) = rx.recv().await {
             debug!("Event {}", event);
 
-            // Try to write to log file, recreate if it fails
-            if let Some(f) = log_file.as_mut() {
-                if let Err(e) =
-                    log_file::write_log_line_async(f, &log_file_path, &event.to_string()).await
-                {
-                    warn!("Failed to write to process monitor log file: {}", e);
-                }
-            } else {
-                // Try to recreate the file if it was None
-                match log_file::open_log_file_async(&log_file_path).await {
-                    Ok(new_file) => {
-                        log_file = Some(new_file);
-                        // Retry the write
-                        if let Some(f) = log_file.as_mut()
-                            && let Err(e) = log_file::write_log_line_async(
-                                f,
-                                &log_file_path,
-                                &event.to_string(),
-                            )
-                            .await
-                        {
+            // Write to the rb2_process rolling log file via log4rs
+            // ProcessEvent::Display serializes to JSON with host_name and host_id
+            info!(target: "rb2_process", "{}", event);
+
+            // Evaluate all RHAI rules against this event (if engine is enabled)
+            if let Some(ref engine) = engine {
+                let matches = engine.eval(&event);
+                for m in &matches {
+                    // Kill the process if rule is in kill mode
+                    if m.mode == RuleMode::Kill {
+                        let pid = event.process_pid as i32;
+                        let ret = unsafe { libc::kill(pid, libc::SIGKILL) };
+                        if ret == 0 {
+                            info!("Killed process pid={} (rule={})", pid, m.name);
+                        } else {
                             warn!(
-                                "Failed to write to recreated process monitor log file: {}",
-                                e
+                                "Failed to kill pid={} (rule={}): {}",
+                                pid,
+                                m.name,
+                                io::Error::last_os_error()
                             );
                         }
                     }
-                    Err(_) => {
-                        // File still can't be opened, skip logging
-                    }
-                }
-            }
 
-            /*
-            let res = engine.eval(&event);
-            if !res.is_empty() {
-                info!("RHAI matched rules: {:?}", res);
+                    debug!("RHAI rule hit: '{}' (mode={})", m.name, m.mode);
+
+                    // Build structured alert JSON
+                    let alert = serde_json::json!({
+                        "timestamp": &event.timestamp,
+                        "rule_name": &m.name,
+                        "rule_mode": m.mode.to_string(),
+                        "action_taken": match m.mode {
+                            RuleMode::Kill => "kill",
+                            RuleMode::Alert => "alert",
+                        },
+                        "event": &event,
+                    });
+
+                    info!(target: "rb2_ace", "{}", alert);
+                }
+                debug!("RHAI eval result: {} match(es)", matches.len());
             }
-            debug!("Res {:?}", res);
-            */
         }
     }
 }
@@ -349,35 +378,29 @@ fn convert_event(e: &ProcessEvent) -> EngineEvent {
 
     EngineEvent {
         timestamp,
-        ecs_version: "0.1.0".to_string(), // just picked a random one lol
-
-        // event.*
-        event_kind: "event".to_string(),
-        event_category: "process".to_string(),
-        event_type: "creation".to_string(),
-        event_action: Some("process-started".to_string()),
-        event_code: None,
-        event_module: Some("ebpf".to_string()),
 
         // process.*
         process_name: comm,
         process_pid: e.pid,
+        process_sid: e.sid,
         process_args,
         process_executable,
         process_ppid: Some(e.ppid),
         process_pname: Some(pcomm),
         process_working_directory,
 
-        // host.*
-        host_name,
-        host_id: helper::get_machine_id(),
-
         // user.*
         user_name,
         user_id: Some(e.uid),
 
-        // agent.*
-        agent_type: Some("red-baron linux".to_string()),
+        // event.*
+        event_category: "process-started".to_string(),
+        event_module: Some("ebpf".to_string()),
+        ecs_version: "0.2.0".to_string(),
+
+        // host.*
+        host_name,
+        host_id: helper::get_machine_id(),
     }
 }
 
@@ -404,5 +427,59 @@ mod tests {
         // Empty remainder should be ignored
         println!("{}", decode_path(&comps));
         assert_eq!(decode_path(&comps), "/usr/bin");
+    }
+
+    #[test]
+    fn test_decode_argv_1() {
+        // Build a packed Args that represents: ["bash", "-c", "echo hi"]
+        let mut argv = Args {
+            argc: 0,
+            used: 0,
+            off: [0u16; MAX_ARGS],
+            len: [0u16; MAX_ARGS],
+            buf: [0u8; ARGS_BUF_SIZE],
+        };
+
+        let items: [&[u8]; 3] = [b"bash\0", b"-c\0", b"echo hi\0"];
+        let mut cursor: usize = 0;
+
+        for (i, s) in items.iter().enumerate() {
+            let l = s.len();
+            assert!(cursor + l <= ARGS_BUF_SIZE);
+
+            argv.off[i] = cursor as u16;
+            argv.len[i] = l as u16;
+            argv.buf[cursor..cursor + l].copy_from_slice(s);
+
+            cursor += l;
+            argv.argc += 1;
+            argv.used = cursor as u32;
+        }
+
+        let decoded = decode_argv(&argv);
+        assert_eq!(decoded, vec!["bash", "-c", "echo hi"]);
+    }
+
+    #[test]
+    fn test_decode_argv_2() {
+        let mut argv = Args {
+            argc: 2,
+            used: 6,
+            off: [0u16; MAX_ARGS],
+            len: [0u16; MAX_ARGS],
+            buf: [0u8; ARGS_BUF_SIZE],
+        };
+
+        // arg0 = "bash\0"
+        argv.buf[..5].copy_from_slice(b"bash\0");
+        argv.off[0] = 0;
+        argv.len[0] = 5;
+
+        // arg1 points too far, should be ignored
+        argv.off[1] = 100;
+        argv.len[1] = 4;
+
+        let decoded = decode_argv(&argv);
+        assert_eq!(decoded, vec!["bash"]);
     }
 }

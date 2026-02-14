@@ -1,3 +1,15 @@
 # rules/unit_test_1.yaml
 name: suspicious_process
+mode: alert
 eval: e.process_name == "nc" && e.event_category == "process"
+tests:
+  - cleartext: "nc 10.0.0.1 4444"
+    process_name: nc
+    process_args: "nc 10.0.0.1 4444"
+    event_category: process
+    should_match: true
+  - cleartext: "ls -la"
+    process_name: ls
+    process_args: "ls -la"
+    event_category: process
+    should_match: false

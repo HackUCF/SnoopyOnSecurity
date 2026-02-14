@@ -1,16 +1,16 @@
 use super::kmsg::{KernLogReader, KmsgReader};
-use super::log::init_logfile;
 use super::walk;
-use super::{bpf, lkm};
+use super::{bpf, lkm, preload};
 use crate::config::yaml::ScanConfig;
 use anyhow::{Context, anyhow};
-use log::error;
+use log::{debug, error};
 use std::{convert::Infallible, time::Duration};
 use tokio::time::sleep;
 
 async fn scan(
     kmsg: &mut Option<KmsgReader>,
     klog: &mut Option<KernLogReader>,
+    check_own_bpf: bool,
 ) -> anyhow::Result<()> {
     let mut errs: Vec<anyhow::Error> = Vec::new();
 
@@ -29,11 +29,15 @@ async fn scan(
     if let Some(klog) = klog {
         step!("klog.scan", klog.scan());
     }
+    if check_own_bpf {
+        step!("bpf::own_bpf_correct", bpf::check_own_bpf());
+    }
     step!("bpf::collect_programs", bpf::collect_programs());
     step!("walk::pid_scan", walk::pid_scan());
     step!("walk::diff_cgroup_vs_proc", walk::diff_cgroup_vs_proc());
     step!("lkm::check_taint", lkm::check_taint());
     step!("lkm::check_sys_module", lkm::check_sys_module());
+    step!("preload::scan", preload::scan());
 
     if errs.is_empty() {
         Ok(())
@@ -56,31 +60,26 @@ pub async fn do_singular_scan() -> anyhow::Result<()> {
         .ok();
     let mut klog = KernLogReader::new()
         .await
-        .inspect_err(|e| error!("Failed to start kern.log reader: {:#}", e))
+        .inspect_err(|e| debug!("Failed to start kern.log reader: {:#}", e))
         .ok();
-    scan(&mut kmsg, &mut klog).await
+    scan(&mut kmsg, &mut klog, false).await
 }
 
 pub async fn do_scans(cfg: ScanConfig) -> anyhow::Result<Infallible> {
-    if let Err(e) = init_logfile(&cfg.log_file).await {
-        error!(
-            "Failed to init scan logfile, continuing without file logging {}",
-            e
-        );
-    }
-
     let mut kmsg = KmsgReader::new()
         .await
         .inspect_err(|e| error!("Failed to start kmsg reader: {:#}", e))
         .ok();
     let mut klog = KernLogReader::new()
         .await
-        .inspect_err(|e| error!("Failed to start kern.log reader: {:#}", e))
+        .inspect_err(|e| debug!("Failed to start kern.log reader: {:#}", e))
         .ok();
 
     let scan_interval = Duration::from_secs(cfg.poll_interval_secs.unwrap_or(60 * 5));
+    let mut first_scan = true;
     loop {
-        scan(&mut kmsg, &mut klog).await?;
+        scan(&mut kmsg, &mut klog, !first_scan).await?;
+        first_scan = false;
         sleep(scan_interval).await;
     }
 }

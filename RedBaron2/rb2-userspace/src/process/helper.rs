@@ -1,15 +1,14 @@
-use log::warn;
 use std::collections::HashMap;
 use std::path::{Component, Path};
 use std::sync::RwLock;
 use std::time::{Duration, Instant};
 use std::{fs, io, sync::OnceLock};
 
-static MACHINE_ID: OnceLock<Option<String>> = OnceLock::new();
+// Re-export host utilities so existing callers (process_monitor) keep working.
+pub use crate::misc::{get_hostname, get_machine_id};
 
 // uid -> (username, timestamp)
 static USER_CACHE: OnceLock<RwLock<HashMap<u32, (String, Instant)>>> = OnceLock::new();
-static HOSTNAME_CACHE: OnceLock<RwLock<Option<(String, Instant)>>> = OnceLock::new();
 const CACHE_TTL: Duration = Duration::from_secs(30);
 
 fn get_user_cache() -> &'static RwLock<HashMap<u32, (String, Instant)>> {
@@ -138,66 +137,6 @@ pub fn argv_prefixes_match(proc_args: &[String], ebpf_args: &[String]) -> bool {
         }
     }
     true
-}
-
-fn read_hostname_file() -> Option<String> {
-    for p in ["/etc/hostname", "/proc/sys/kernel/hostname"] {
-        if let Ok(s) = fs::read_to_string(p) {
-            let t = s.trim();
-            if !t.is_empty() {
-                return Some(t.to_string());
-            }
-        }
-    }
-    None
-}
-
-fn get_hostname_cache() -> &'static RwLock<Option<(String, Instant)>> {
-    HOSTNAME_CACHE.get_or_init(|| RwLock::new(None))
-}
-
-/// Returns a chached hostname
-pub fn get_hostname() -> Option<String> {
-    {
-        let cache = get_hostname_cache().read().unwrap();
-        if let Some((val, ts)) = cache.as_ref()
-            && ts.elapsed() < CACHE_TTL
-        {
-            return Some(val.clone());
-        }
-    }
-
-    // Slow path: read from files
-    if let Some(fresh) = read_hostname_file() {
-        let mut cache = get_hostname_cache().write().unwrap();
-        *cache = Some((fresh.clone(), Instant::now()));
-        return Some(fresh);
-    }
-
-    None
-}
-
-/// Returns the machine-id as Some(String).
-/// If /etc/machine-id cannot be read or is empty,
-/// logs a warning and returns None
-pub fn get_machine_id() -> Option<String> {
-    MACHINE_ID
-        .get_or_init(|| match fs::read_to_string("/etc/machine-id") {
-            Ok(s) => {
-                let trimmed = s.trim_end();
-                if trimmed.is_empty() {
-                    warn!("/etc/machine-id is empty, using fallback \"0\"");
-                    None
-                } else {
-                    Some(trimmed.to_owned())
-                }
-            }
-            Err(e) => {
-                warn!("Failed to read /etc/machine-id: {e}");
-                None
-            }
-        })
-        .clone()
 }
 
 #[cfg(test)]

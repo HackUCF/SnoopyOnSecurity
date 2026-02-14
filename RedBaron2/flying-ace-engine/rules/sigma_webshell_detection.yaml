@@ -1,0 +1,6 @@
+name: sigma_webshell_detection
+mode: alert
+eval: |
+  (
+    (((e.process_pname == "httpd" || e.process_pname == "lighttpd" || e.process_pname == "nginx" || e.process_pname == "apache2" || e.process_pname == "node" || e.process_pname == "caddy")) || (false /* ParentCommandLine not available in Rhai API */) || (false /* ParentCommandLine not available in Rhai API */)) && ((e.process_name == "whoami" || e.process_name == "ifconfig" || e.process_name == "ip" || e.process_name == "uname" || e.process_name == "cat" || e.process_name == "crontab" || e.process_name == "hostname" || e.process_name == "iptables" || e.process_name == "netstat" || e.process_name == "pwd" || e.process_name == "route"))
+  )

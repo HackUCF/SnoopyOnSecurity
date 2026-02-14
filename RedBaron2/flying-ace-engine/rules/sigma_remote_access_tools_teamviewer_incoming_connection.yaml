@@ -1,0 +1,6 @@
+name: sigma_remote_access_tools_teamviewer_incoming_connection
+mode: alert
+eval: |
+  (
+    e.process_pname == "TeamViewer_Service" && e.process_name == "TeamViewer_Desktop" && e.process_args.ends_with("/TeamViewer_Desktop --IPCport 5939 --Module 1")
+  )

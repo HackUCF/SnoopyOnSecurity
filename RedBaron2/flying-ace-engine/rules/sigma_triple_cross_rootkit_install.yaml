@@ -1,0 +1,6 @@
+name: sigma_triple_cross_rootkit_install
+mode: alert
+eval: |
+  (
+    e.process_name == "sudo" && (e.process_args.contains(" tc ") && e.process_args.contains(" enp0s3 ")) && (e.process_args.contains(" qdisc ") || e.process_args.contains(" filter "))
+  )

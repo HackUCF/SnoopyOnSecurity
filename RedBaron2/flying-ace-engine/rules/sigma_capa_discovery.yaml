@@ -1,0 +1,6 @@
+name: sigma_capa_discovery
+mode: alert
+eval: |
+  (
+    e.process_name == "getcap" && e.process_args.contains(" -r ")
+  )

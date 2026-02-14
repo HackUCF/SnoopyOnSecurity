@@ -1,0 +1,78 @@
+---
+- name: Install Debian package set
+  ansible.builtin.apt:
+    name: "{{ install_core_debian_packages }}"
+    state: present
+    update_cache: true
+  when: ansible_facts['pkg_mgr'] == "apt"
+
+- name: Check if python3-dnf is installed
+  ansible.builtin.command: rpm -q python3-dnf
+  register: python3_dnf_check
+  changed_when: false
+  failed_when: false
+  when: ansible_facts['pkg_mgr'] in ["dnf", "yum"]
+
+- name: Bootstrap python3-dnf if missing (dnf)
+  ansible.builtin.raw: dnf install -y python3-dnf
+  args:
+    warn: false
+  when:
+    - ansible_facts['pkg_mgr'] == "dnf"
+    - python3_dnf_check.rc != 0
+  register: bootstrap_dnf
+  changed_when: bootstrap_dnf.rc == 0
+
+- name: Bootstrap python3-dnf if missing (yum)
+  ansible.builtin.raw: yum install -y python3-dnf
+  args:
+    warn: false
+  when:
+    - ansible_facts['pkg_mgr'] == "yum"
+    - python3_dnf_check.rc != 0
+  register: bootstrap_yum
+  changed_when: bootstrap_yum.rc == 0
+
+- name: Install epel-release
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  when:
+    - ansible_facts['pkg_mgr'] == "dnf"
+    - ansible_facts['os_family'] == "RedHat"
+
+- name: Install RHEL package set with dnf
+  ansible.builtin.dnf:
+    name: "{{ install_core_rhel_packages }}"
+    state: present
+  when: ansible_facts['pkg_mgr'] == "dnf"
+
+- name: Install RHEL package set with yum
+  ansible.builtin.dnf:
+    name: "{{ install_core_rhel_packages }}"
+    state: present
+  when: ansible_facts['pkg_mgr'] == "yum"
+
+- name: Install jq on SUSE with zypper
+  ansible.builtin.package:
+    name:
+      - jq
+    state: present
+    use: zypper
+  when: ansible_facts['pkg_mgr'] == "zypper"
+
+- name: Install jq on Alpine
+  ansible.builtin.package:
+    name:
+      - jq
+    state: present
+    use: apk
+  when: ansible_facts['pkg_mgr'] == "apk"
+
+- name: Try installing yq from package manager on apt
+  ansible.builtin.apt:
+    name: yq
+    state: present
+  register: yq_pkg_result
+  failed_when: false
+  when: ansible_facts['pkg_mgr'] == "apt"

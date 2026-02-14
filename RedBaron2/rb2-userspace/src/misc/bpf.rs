@@ -1,5 +1,8 @@
 use super::log::log_detection;
+use aya::programs::ProgramError;
 use aya::programs::loaded_programs;
+use serde_json::Value;
+use serde_json::json;
 use std::collections::HashSet;
 use std::io;
 use tokio::fs::{self, File};
@@ -58,7 +61,21 @@ pub async fn collect_programs() -> anyhow::Result<()> {
     excluded.extend(systemd_exclude?);
 
     for info_res in loaded_programs() {
-        let info = info_res?;
+        let info = match info_res {
+            Ok(i) => i,
+
+            Err(ProgramError::IOError(ioe)) if ioe.kind() == io::ErrorKind::NotFound => {
+                continue;
+            }
+            Err(ProgramError::SyscallError(se))
+                if se.io_error.kind() == io::ErrorKind::NotFound =>
+            {
+                continue;
+            }
+
+            Err(e) => return Err(e.into()),
+        };
+
         let id = info.id();
         if excluded.contains(&id) {
             continue;
@@ -75,19 +92,47 @@ pub async fn collect_programs() -> anyhow::Result<()> {
         if runtime > 0 {
             let hrs = runtime / 3600;
             let mins = (runtime / 60) % 60;
-            log_detection(&format!(
-                "Found ebpf program {} of type {} running for {}h:{}m",
-                prog_name, prog_type, hrs, mins
-            ))
+            log_detection(
+                "ebpf_program",
+                &format!(
+                    "Found ebpf program {} of type {} running for {}h:{}m",
+                    prog_name, prog_type, hrs, mins
+                ),
+                json!({
+                    "prog_name": prog_name,
+                    "prog_type": prog_type,
+                    "runtime_hours": hrs,
+                    "runtime_minutes": mins,
+                }),
+            )
             .await;
         } else {
-            log_detection(&format!(
-                "Found ebpf program {} of type {}",
-                prog_name, prog_type
-            ))
+            log_detection(
+                "ebpf_program",
+                &format!("Found ebpf program {} of type {}", prog_name, prog_type),
+                json!({
+                    "prog_name": prog_name,
+                    "prog_type": prog_type,
+                }),
+            )
             .await;
         }
     }
 
+    Ok(())
+}
+
+pub async fn check_own_bpf() -> anyhow::Result<()> {
+    let ids = prog_ids_for_pid(std::process::id() as i32).await?;
+    let num = ids.len();
+
+    if num < 12 {
+        log_detection(
+            "ebpf_selfcheck",
+            &format!("rb2's bpf program ids are missing. Currently at: {}", num),
+            Value::Null,
+        )
+        .await;
+    }
     Ok(())
 }

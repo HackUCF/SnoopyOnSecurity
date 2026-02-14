@@ -1,0 +1,6 @@
+name: sigma_auditctl_clear_rules
+mode: alert
+eval: |
+  (
+    e.process_name == "auditctl" && re_match(e.process_args, "-D")
+  )

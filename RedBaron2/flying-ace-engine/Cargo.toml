@@ -5,9 +5,15 @@ edition = "2024"
 
 [dependencies]
 regex = "1.12.2"
-rhai = { version = "1.23.6", features = ["sync"] }
+rhai = { version = "1.24.0", features = [
+    "sync",
+    "no_float",
+    "no_module",
+    "no_custom_syntax",
+    "no_position",
+]}
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.146"
+serde_json = "1.0.149"
 serde_with = "3.16.1"
 serde_yaml = "0.9.34" # XXX: this is deprecated
 

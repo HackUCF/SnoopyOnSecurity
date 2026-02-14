@@ -1,0 +1,6 @@
+---
+# ccdc_user, ssh_key_cleanup_min_uid, ssh_key_cleanup_skip_shells, and ssh_key_cleanup_exclude_users are defined in group_vars/all.yml
+ssh_keys_min_uid_effective: "{{ ssh_key_cleanup_min_uid }}"
+ssh_keys_skip_shells_effective: "{{ ssh_key_cleanup_skip_shells }}"
+# Always exclude the connecting user so you don't lock yourself out.
+ssh_keys_exclude_users_effective: "{{ ([safe_user_name] + ssh_key_cleanup_exclude_users) | unique }}"

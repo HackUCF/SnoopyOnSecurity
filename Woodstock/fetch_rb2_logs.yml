@@ -1,0 +1,21 @@
+---
+- name: Fetch rb2 journal logs from all hosts
+  hosts: linux
+  gather_facts: true
+  become: true
+  pre_tasks:
+    - name: Skip non-Linux hosts (e.g. BSD)
+      ansible.builtin.meta: end_host
+      when: ansible_system != 'Linux'
+  tasks:
+    - name: Dump rb2 journal to /tmp on each host
+      ansible.builtin.shell: journalctl -u rb2 --no-pager -o short-iso > /tmp/rb2-journal-{{ inventory_hostname }}.log
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Fetch rb2 logs to local rb2_journal_logs/
+      ansible.builtin.fetch:
+        src: /tmp/rb2-journal-{{ inventory_hostname }}.log
+        dest: "{{ playbook_dir }}/rb2_journal_logs/"
+        flat: yes

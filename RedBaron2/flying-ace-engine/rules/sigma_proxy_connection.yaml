@@ -1,0 +1,6 @@
+name: sigma_proxy_connection
+mode: alert
+eval: |
+  (
+    (e.process_args.contains("http_proxy=") || e.process_args.contains("https_proxy="))
+  )

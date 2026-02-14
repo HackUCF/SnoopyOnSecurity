@@ -1,0 +1,13 @@
+[Unit]
+Description=Vector Log Collection
+After=network.target
+
+[Service]
+ExecStart={{ install_vector_bin }} -c {{ install_vector_config_path }}
+Restart=on-failure
+RestartSec=5s
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+name: sigma_triple_cross_rootkit_execve_hijack
+mode: alert
+eval: |
+  (
+    e.process_name == "sudo" && e.process_args.contains("execve_hijack")
+  )

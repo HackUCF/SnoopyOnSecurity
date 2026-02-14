@@ -1,4 +1,4 @@
-use crate::firewall::common::{FirewallEvent, Handler};
+use crate::firewall::{FirewallEvent, Handler};
 use async_trait::async_trait;
 use nfq::Verdict;
 use tokio::sync::mpsc::Sender;

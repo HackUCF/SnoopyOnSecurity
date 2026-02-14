@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Fallback yara rules dir
-YARA_RULES_URL="https://github.com/nmagill123/compiled-yara-rules-rb2/releases/download/v20260102-152737/linux.tar.xz"
+YARA_RULES_URL="https://github.com/nmagill123/compiled-yara-rules-rb2/releases/download/v20260212-032645/linux.tar.xz"
 # Fallback libbpf source tarball
 LIBBPF_SRC_URL="https://github.com/libbpf/libbpf/archive/refs/tags/v1.6.2.tar.gz"
 

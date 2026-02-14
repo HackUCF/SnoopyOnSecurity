@@ -1,0 +1,14 @@
+# Base Docker image for sandbox containers
+FROM alpine:latest
+
+# Install basic utilities
+RUN apk add --no-cache \
+    ca-certificates \
+    libc6-compat \
+    && rm -rf /var/cache/apk/*
+
+# Create directory for imix binary
+RUN mkdir -p /imix
+
+# Default command (will be overridden)
+CMD ["/bin/sh"]

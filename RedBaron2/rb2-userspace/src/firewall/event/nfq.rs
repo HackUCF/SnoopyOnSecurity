@@ -1,5 +1,5 @@
-use crate::firewall::common::{EventProducer, FirewallEvent};
 use crate::firewall::sockets;
+use crate::firewall::{EventProducer, FirewallEvent};
 use anyhow::Context;
 use anyhow::anyhow;
 use async_trait::async_trait;
@@ -10,6 +10,7 @@ use log::{debug, error, info, trace, warn};
 use nfq::{Queue, Verdict};
 use std::error::Error;
 use std::io;
+use std::net::Ipv4Addr;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
@@ -37,6 +38,7 @@ impl NfqEventProducer {
             receiver: OnceLock::new(),
         }
     }
+
     /// this sender must send back processed events for the firewall to work!
     pub fn get_sender(&self) -> anyhow::Result<Sender<Verdict>> {
         let (tx, rx) = tokio::sync::mpsc::channel(1024);
@@ -94,11 +96,32 @@ fn run_firewall_blocking(
     let mut tcp_map: HashMap<MapData, Ipv4Key, Owner> = HashMap::try_from(tcp_raw)?;
     let mut udp_map: HashMap<MapData, Ipv4Key, Owner> = HashMap::try_from(udp_raw)?;
 
+    const MAX_QUEUE_NUM: u16 = 100;
     let mut queue = Queue::open().context("failed to open nfqueue")?;
-    queue.bind(0).context("failed to bind nfqueue 0")?;
-    info!("Netfilter queue ready");
 
-    ensure_iptables()?;
+    let mut queue_num = None;
+    for num in 0..MAX_QUEUE_NUM {
+        match queue.bind(num) {
+            Ok(_) => {
+                queue_num = Some(num);
+                break;
+            }
+            Err(e) => {
+                trace!("Failed to bind to nfqueue {}: {}", num, e);
+            }
+        }
+    }
+
+    let queue_num = queue_num.ok_or_else(|| {
+        anyhow!(
+            "Failed to bind to any nfqueue (tried 0-{})",
+            MAX_QUEUE_NUM - 1
+        )
+    })?;
+
+    info!("Netfilter queue {} ready", queue_num);
+
+    ensure_iptables(queue_num)?;
 
     let mut last_cleanup = std::time::Instant::now();
 
@@ -176,15 +199,20 @@ fn handle_packet(
     };
 
     if let Some(owner) = owner {
+        // "comm=<comm> ip=<ip> dport=<dport> op=<op>"
         let ev = FirewallEvent {
-            pid: owner.pid as u32,
-            context: comm_to_string(&owner.comm),
+            pid: owner.pid,
+            comm: comm_to_string(&owner.comm),
+            dport: Some(key.dport),
+            ip: Some(Ipv4Addr::from(key.daddr).to_string()),
+            op: None,
         };
+
         if let Err(e) = tx.blocking_send(ev) {
             let pid = owner.pid;
             error!(
                 "Unable to send off firewall event to dispatcher pid={} {}",
-                pid, e,
+                pid, e
             );
             return Verdict::Drop;
         }
@@ -223,7 +251,7 @@ unsafe impl Pod for Ipv4Key {}
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct Owner {
-    pub pid: u64,
+    pub pid: i32,
     pub comm: [u8; 16],
 }
 unsafe impl Pod for Owner {}
@@ -239,8 +267,8 @@ fn comm_to_string(comm: &[u8; 16]) -> Option<String> {
 }
 
 fn delete_old_elements(map: &mut HashMap<MapData, Ipv4Key, Owner>) -> Result<(), MapError> {
-    // TODO: also remove sockets that no longer exist (can be a problem for smth like
-    // systemd-resolvd which doesn't die but can open several sockets that close
+    // TODO: also remove sockets that no longer exist
+    // (can be a problem for which doesn't die but can open several sockets that close)
     let keys: Vec<Ipv4Key> = map.keys().filter_map(Result::ok).collect();
     for key in keys {
         if let Ok(decision) = map.get(&key, 0) {
@@ -254,7 +282,7 @@ fn delete_old_elements(map: &mut HashMap<MapData, Ipv4Key, Owner>) -> Result<(),
     Ok(())
 }
 
-fn pid_exists(pid: u64) -> bool {
+fn pid_exists(pid: i32) -> bool {
     Path::new(&format!("/proc/{}", pid)).exists()
 }
 
@@ -277,20 +305,20 @@ fn parse_ipv4_key(payload: &[u8]) -> io::Result<Ipv4Key> {
     })
 }
 
-fn ensure_iptables() -> anyhow::Result<()> {
-    match iptables_attached()? {
+fn ensure_iptables(queue_num: u16) -> anyhow::Result<()> {
+    match iptables_attached(queue_num)? {
         true => {
-            debug!("iptables rule already exists");
+            debug!("iptables rule already exists for queue {}", queue_num);
             Ok(())
         }
         false => {
-            attach_iptables()?;
+            attach_iptables(queue_num)?;
             Ok(())
         }
     }
 }
 
-fn iptables_attached() -> anyhow::Result<bool> {
+fn iptables_attached(queue_num: u16) -> anyhow::Result<bool> {
     let ipt = iptables::new(false)
         .map_err(|e: Box<dyn Error>| anyhow::anyhow!("{}", e))
         .context("failed to open iptables")?;
@@ -300,7 +328,10 @@ fn iptables_attached() -> anyhow::Result<bool> {
         .map_err(|e: Box<dyn Error>| anyhow::anyhow!("{}", e))
         .context("failed to list iptables rules on mangle OUTPUT chain")?;
 
-    let target_rule = "-A OUTPUT -m addrtype ! --dst-type LOCAL -m conntrack --ctstate NEW,RELATED -j NFQUEUE --queue-num 0 --queue-bypass";
+    let target_rule = format!(
+        "-A OUTPUT -m addrtype ! --dst-type LOCAL -m conntrack --ctstate NEW,RELATED -j NFQUEUE --queue-num {} --queue-bypass",
+        queue_num
+    );
 
     for line in &rules {
         if line.trim() == target_rule {
@@ -311,18 +342,24 @@ fn iptables_attached() -> anyhow::Result<bool> {
     Ok(false)
 }
 
-fn attach_iptables() -> anyhow::Result<()> {
+fn attach_iptables(queue_num: u16) -> anyhow::Result<()> {
     let ipt = iptables::new(false)
         .map_err(|e: Box<dyn Error>| anyhow::anyhow!("{}", e))
         .context("failed to open iptables")?;
 
-    let rule = "-m addrtype ! --dst-type LOCAL -m conntrack --ctstate NEW,RELATED -j NFQUEUE --queue-num 0 --queue-bypass";
+    let rule = format!(
+        "-m addrtype ! --dst-type LOCAL -m conntrack --ctstate NEW,RELATED -j NFQUEUE --queue-num {} --queue-bypass",
+        queue_num
+    );
 
-    ipt.insert("mangle", "OUTPUT", rule, 1)
+    ipt.insert("mangle", "OUTPUT", &rule, 1)
         .map_err(|e: Box<dyn Error>| anyhow::anyhow!("{}", e))
         .context("failed to insert NFQUEUE rule into mangle output at position 1")?;
 
-    info!("Iptables output to the netfilter queue is now set up");
+    info!(
+        "Iptables output to netfilter queue {} is now set up",
+        queue_num
+    );
 
     Ok(())
 }

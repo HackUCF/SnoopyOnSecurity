@@ -1,0 +1,6 @@
+name: sigma_susp_interactive_bash
+mode: alert
+eval: |
+  (
+    (false /* ParentCommandLine not available in Rhai API */) && (((e.process_args.contains("-c import ") || e.process_args.contains("base64") || e.process_args.contains("pty.spawn"))) || ((re_match(e.process_name, "whoami$") || re_match(e.process_name, "iptables$") || e.process_name == "ncat" || e.process_name == "nc" || e.process_name == "netcat")))
+  )

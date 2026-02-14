@@ -1,0 +1,21 @@
+---
+- name: Skip if no cleanup targets defined
+  ansible.builtin.meta: end_host
+  when: service_cleanup_targets | length == 0
+
+- name: Kill processes matching target
+  ansible.builtin.command: pkill -9 -f "{{ item.name }}"
+  loop: "{{ service_cleanup_targets }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: pkill_result
+  failed_when: pkill_result.rc not in [0, 1]
+  changed_when: pkill_result.rc == 0
+
+- name: Delete binary at path
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ service_cleanup_targets }}"
+  loop_control:
+    label: "{{ item.path }}"

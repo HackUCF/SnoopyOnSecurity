@@ -1,0 +1,40 @@
+---
+- name: Refresh apt metadata
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_facts['pkg_mgr'] == "apt"
+  changed_when: false
+- name: Reinstall Debian/Ubuntu packages
+  ansible.builtin.command: >
+    apt-get install --reinstall -y {{ reinstall_core_debian_reinstall_packages | join(' ') }}
+  when: ansible_facts['pkg_mgr'] == "apt"
+  changed_when: true
+
+- name: Reinstall RHEL-family packages with dnf
+  ansible.builtin.command: >
+    dnf reinstall -y {{ reinstall_core_rhel_reinstall_packages | join(' ') }}
+  when: ansible_facts['pkg_mgr'] == "dnf"
+  changed_when: true
+
+- name: Reinstall RHEL-family packages with yum
+  ansible.builtin.command: >
+    yum reinstall -y {{ reinstall_core_rhel_reinstall_packages | join(' ') }}
+  when: ansible_facts['pkg_mgr'] == "yum"
+  changed_when: true
+
+- name: Refresh zypper metadata
+  ansible.builtin.command: zypper refresh
+  when: ansible_facts['pkg_mgr'] == "zypper"
+  changed_when: false
+
+- name: Reinstall openSUSE/SLE packages
+  ansible.builtin.command: >
+    zypper install --force -y {{ reinstall_core_suse_reinstall_packages | join(' ') }}
+  when: ansible_facts['pkg_mgr'] == "zypper"
+  changed_when: true
+
+- name: Install/reinstall Alpine packages
+  ansible.builtin.command: >
+    apk add --no-cache {{ reinstall_core_alpine_packages | join(' ') }}
+  when: ansible_facts['pkg_mgr'] == "apk"
+  changed_when: true

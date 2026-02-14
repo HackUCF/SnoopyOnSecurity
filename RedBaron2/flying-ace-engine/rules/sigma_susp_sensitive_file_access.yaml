@@ -1,0 +1,6 @@
+name: sigma_susp_sensitive_file_access
+mode: alert
+eval: |
+  (
+    (((e.process_name == "cat" || e.process_name == "echo" || e.process_name == "grep" || e.process_name == "head" || e.process_name == "more" || e.process_name == "tail") && e.process_args.contains(">")) || ((e.process_name == "emacs" || e.process_name == "nano" || e.process_name == "sed" || e.process_name == "vi" || e.process_name == "vim"))) && ((e.process_args.contains("/bin/login") || e.process_args.contains("/bin/passwd") || e.process_args.contains("/boot/") || e.process_args.contains("/etc/*.conf") || e.process_args.contains("/etc/cron.") || e.process_args.contains("/etc/crontab") || e.process_args.contains("/etc/hosts") || e.process_args.contains("/etc/init.d") || e.process_args.contains("/etc/sudoers") || e.process_args.contains("/opt/bin/") || e.process_args.contains("/sbin") || e.process_args.contains("/usr/bin/") /* truncated: 1 more value(s) omitted to stay within Rhai complexity limit */))
+  )

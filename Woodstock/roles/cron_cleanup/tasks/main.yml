@@ -1,0 +1,20 @@
+---
+- name: Remove cron-related packages on Debian
+  ansible.builtin.apt:
+    name: "{{ cron_cleanup_debian_packages }}"
+    state: absent
+    purge: true
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Remove cron-related packages on RedHat
+  ansible.builtin.dnf:
+    name: "{{ cron_cleanup_rhel_packages }}"
+    state: absent
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Kill cron-related processes
+  ansible.builtin.command: killall "{{ item }}"
+  loop: "{{ cron_cleanup_processes }}"
+  register: cron_kill_result
+  failed_when: cron_kill_result.rc not in [0, 1]
+  changed_when: cron_kill_result.rc == 0

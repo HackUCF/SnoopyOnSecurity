@@ -1,0 +1,6 @@
+name: sigma_gcc_shell_execution
+mode: alert
+eval: |
+  (
+    ((e.process_name == "c89" || e.process_name == "c99" || e.process_name == "gcc") && e.process_args.contains("-wrapper")) && ((e.process_args.contains("/bin/bash,-s") || e.process_args.contains("/bin/dash,-s") || e.process_args.contains("/bin/fish,-s") || e.process_args.contains("/bin/sh,-s") || e.process_args.contains("/bin/zsh,-s")))
+  )

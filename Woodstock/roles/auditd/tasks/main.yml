@@ -1,0 +1,134 @@
+---
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: auto
+  register: package_facts_result
+  failed_when: false
+
+- name: Check if audit package is installed (fallback for missing Python bindings)
+  ansible.builtin.command: rpm -q audit auditd
+  register: audit_rpm_check
+  changed_when: false
+  failed_when: false
+  when:
+    - package_facts_result is failed
+    - ansible_facts['pkg_mgr'] in ['dnf', 'yum', 'zypper']
+
+- name: Check if audit package is installed on Debian (fallback)
+  ansible.builtin.command: dpkg -l auditd
+  register: audit_dpkg_check
+  changed_when: false
+  failed_when: false
+  when:
+    - package_facts_result is failed
+    - ansible_facts['pkg_mgr'] == 'apt'
+
+- name: Set package installed fact (from package_facts)
+  ansible.builtin.set_fact:
+    auditd_already_installed: "{{ ('audit' in ansible_facts.get('packages', {})) or ('auditd' in ansible_facts.get('packages', {})) }}"
+  when:
+    - package_facts_result is succeeded
+    - "'packages' in ansible_facts"
+
+- name: Set package installed fact (from rpm check)
+  ansible.builtin.set_fact:
+    auditd_already_installed: "{{ audit_rpm_check.rc == 0 }}"
+  when:
+    - package_facts_result is failed
+    - audit_rpm_check is defined
+
+- name: Set package installed fact (from dpkg check)
+  ansible.builtin.set_fact:
+    auditd_already_installed: "{{ audit_dpkg_check.rc == 0 }}"
+  when:
+    - package_facts_result is failed
+    - audit_dpkg_check is defined
+
+- name: Default package installed fact to false
+  ansible.builtin.set_fact:
+    auditd_already_installed: false
+  when: auditd_already_installed is not defined
+
+- name: Select audit package for this package manager
+  ansible.builtin.set_fact:
+    auditd_package_name: "{{ auditd_package_by_mgr.get(ansible_facts['pkg_mgr'], '') }}"
+
+- name: Fail when package manager is unsupported for auditd policy
+  ansible.builtin.fail:
+    msg: "Unsupported package manager for auditd policy: {{ ansible_facts['pkg_mgr'] }}"
+  when: auditd_package_name | length == 0
+
+- name: Install audit package only when missing
+  ansible.builtin.package:
+    name: "{{ auditd_package_name }}"
+    state: present
+  when: not auditd_already_installed
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: AlmaLinux is silly
+  ansible.builtin.dnf:
+    name: audit-rules
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'
+  failed_when: false
+
+- name: Resolve auditd service key
+  ansible.builtin.set_fact:
+    auditd_service_key: >-
+      {{ 'auditd.service' if 'auditd.service' in ansible_facts['services']
+      else ('auditd' if 'auditd' in ansible_facts['services'] else '') }}
+
+- name: Fail when auditd service is missing
+  ansible.builtin.fail:
+    msg: "auditd service not found after package install on {{ inventory_hostname }}"
+  when: auditd_service_key | length == 0
+
+- name: Ensure auditd service is enabled and running
+  ansible.builtin.service:
+    name: "{{ auditd_service_key }}"
+    enabled: true
+    state: started
+
+- name: Ensure audit rules directory exists
+  ansible.builtin.file:
+    path: /etc/audit/rules.d
+    state: directory
+    mode: "0750"
+    owner: root
+    group: root
+
+- name: Deploy binary exclusion rules
+  ansible.builtin.template:
+    src: 00-ccdc-excludes.rules.j2
+    dest: "{{ auditd_excludes_file }}"
+    mode: "0640"
+    owner: root
+    group: root
+  notify: Reload auditd rules
+
+- name: Deploy audit rules
+  ansible.builtin.copy:
+    src: audit.rules
+    dest: "{{ auditd_rules_file }}"
+    mode: "0640"
+    owner: root
+    group: root
+  notify: Reload auditd rules
+
+- name: Load audit rules immediately
+  ansible.builtin.command: auditctl -R {{ auditd_rules_file }}
+  register: auditd_load_rules
+  changed_when: auditd_load_rules.rc == 0
+  failed_when: false
+
+- name: Verify audit rules are active
+  ansible.builtin.command: auditctl -l
+  register: auditd_active_rules
+  changed_when: false
+
+- name: Display active audit rules
+  ansible.builtin.debug:
+    msg: "{{ auditd_active_rules.stdout_lines }}"
+  when: auditd_active_rules.stdout_lines is defined

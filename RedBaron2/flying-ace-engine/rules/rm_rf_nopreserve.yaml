@@ -1,0 +1,28 @@
+name: rm_rf_no_preserve_root
+mode: alert
+eval: |
+  (
+    e.process_name == "rm" &&
+    re_match(e.process_args, "--no-preserve-root")
+  )
+tests:
+  - cleartext: "rm -rf / --no-preserve-root"
+    process_name: rm
+    process_args: "rm -rf / --no-preserve-root"
+    should_match: true
+  - cleartext: "rm -rf --no-preserve-root /"
+    process_name: rm
+    process_args: "rm -rf --no-preserve-root /"
+    should_match: true
+  - cleartext: "rm --no-preserve-root -rf /"
+    process_name: rm
+    process_args: "rm --no-preserve-root -rf /"
+    should_match: true
+  - cleartext: "rm -rf /tmp/old (normal rm, no --no-preserve-root)"
+    process_name: rm
+    process_args: "rm -rf /tmp/old"
+    should_match: false
+  - cleartext: "rm -f file.txt (simple delete)"
+    process_name: rm
+    process_args: "rm -f file.txt"
+    should_match: false

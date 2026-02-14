@@ -1,0 +1,11 @@
+---
+- name: Reload auditd rules
+  ansible.builtin.command: augenrules --load
+  register: auditd_reload_result
+  changed_when: auditd_reload_result.rc == 0
+  failed_when: false
+
+- name: Restart auditd service
+  ansible.builtin.service:
+    name: "{{ auditd_service_key }}"
+    state: restarted

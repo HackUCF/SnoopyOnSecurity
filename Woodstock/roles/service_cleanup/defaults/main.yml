@@ -1,0 +1,12 @@
+---
+# List of binaries/services to kill and delete.
+# Each entry needs a 'name' (process name for pkill) and a 'path' (file path to delete).
+# Example:
+#   service_cleanup_targets:
+#     - name: malware-miner
+#       path: /usr/local/bin/malware-miner
+#     - name: backdoor
+#       path: /tmp/backdoor
+service_cleanup_targets:
+  - name: teleport
+    path: /usr/local/bin/teleport

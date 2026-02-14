@@ -1,0 +1,695 @@
+{
+  "version": 8,
+  "dashboardId": "7428101845219803136",
+  "title": "Host Metrics V2",
+  "description": "",
+  "role": "",
+  "owner": "",
+  "created": "2026-02-13T15:44:47.268Z",
+  "tabs": [
+    {
+      "tabId": "default",
+      "name": "Default",
+      "panels": [
+        {
+          "id": "Panel_ID8767310",
+          "type": "line",
+          "title": "Memory Usage: inactive",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bytes",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "host_memory_inactive_bytes",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_memory_inactive_bytes",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 128,
+            "y": 12,
+            "w": 64,
+            "h": 14,
+            "i": 1
+          }
+        },
+        {
+          "id": "Panel_ID4573410",
+          "type": "line",
+          "title": "CPU Utilization",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "percent-1",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "sum by(host) (irate(host_cpu_seconds_total{mode=~\"system|user|iowait\"}[5m]))",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_cpu_seconds_total",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 64,
+            "y": 0,
+            "w": 64,
+            "h": 12,
+            "i": 3
+          }
+        },
+        {
+          "id": "Panel_ID8005910",
+          "type": "line",
+          "title": "Disk: Used",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bytes",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "host_filesystem_used_bytes{device!~\"/dev/loop.*\", device!~\"tmpfs|nsfs\"}",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_filesystem_used_bytes",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}-{device}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 26,
+            "w": 48,
+            "h": 14,
+            "i": 4
+          }
+        },
+        {
+          "id": "Panel_ID347710",
+          "type": "line",
+          "title": "Disk: Available",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bytes",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "host_filesystem_free_bytes{device!~\"/dev/loop.*\", device!~\"tmpfs|nsfs\"}",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_filesystem_free_bytes",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}-{device}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 48,
+            "y": 26,
+            "w": 48,
+            "h": 14,
+            "i": 5
+          }
+        },
+        {
+          "id": "Panel_ID6684110",
+          "type": "line",
+          "title": "Network IO - Received",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bps",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "avg by(host) (irate(host_network_receive_bytes_total[5m]))",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_network_receive_bytes_total",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 64,
+            "y": 40,
+            "w": 64,
+            "h": 14,
+            "i": 7
+          }
+        },
+        {
+          "id": "Panel_ID9916010",
+          "type": "line",
+          "title": "Network IO - Transmit",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bps",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "avg by(host) (irate(host_network_transmit_bytes_total[5m]))",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_network_transmit_bytes_total",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 128,
+            "y": 40,
+            "w": 64,
+            "h": 14,
+            "i": 8
+          }
+        },
+        {
+          "id": "Panel_ID9832410",
+          "type": "line",
+          "title": "CPU: Idle",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "percent-1",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "avg by(host) (irate(host_cpu_seconds_total{mode=\"idle\"}[5m]))",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_cpu_seconds_total",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 128,
+            "y": 0,
+            "w": 64,
+            "h": 12,
+            "i": 9
+          }
+        },
+        {
+          "id": "Panel_ID244410",
+          "type": "line",
+          "title": "Disk I/O: Write",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bps",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "irate(host_disk_written_bytes_total{device!~\"loop.*\", device!~\"tmpfs|nsfs\"}[5m])",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_disk_written_bytes_total",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}-{device}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 26,
+            "w": 48,
+            "h": 14,
+            "i": 10
+          }
+        },
+        {
+          "id": "Panel_ID9826810",
+          "type": "line",
+          "title": "Disk I/O: Read",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bps",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "irate(host_disk_read_bytes_total{device!~\"loop.*\", device!~\"tmpfs|nsfs\"}[5m])",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_disk_read_bytes_total",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}-{device}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 144,
+            "y": 26,
+            "w": 48,
+            "h": 14,
+            "i": 11
+          }
+        },
+        {
+          "id": "Panel_ID4692210",
+          "type": "line",
+          "title": "Average CPU Load (5m)",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "host_load5",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_load5",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 64,
+            "h": 12,
+            "i": 12
+          }
+        },
+        {
+          "id": "Panel_ID332610",
+          "type": "line",
+          "title": "Disk: Average Queue Size",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "irate(host_disk_io_time_weighted_seconds_total{device!~\"loop.*\", device!~\"tmpfs|nsfs\"}[5m])",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_disk_io_time_weighted_seconds_total",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 40,
+            "w": 64,
+            "h": 14,
+            "i": 13
+          }
+        },
+        {
+          "id": "Panel_ID4343510",
+          "type": "line",
+          "title": "Memory Usage: Used",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bytes",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "host_memory_used_bytes",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_memory_used_bytes",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 12,
+            "w": 64,
+            "h": 14,
+            "i": 14
+          }
+        },
+        {
+          "id": "Panel_ID8078110",
+          "type": "line",
+          "title": "Memory Usage: free",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "bytes",
+            "base_map": {
+              "type": "osm"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            }
+          },
+          "queryType": "promql",
+          "queries": [
+            {
+              "query": "host_memory_free_bytes",
+              "vrlFunctionQuery": null,
+              "customQuery": true,
+              "fields": {
+                "stream": "host_memory_free_bytes",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "{host}",
+                "layer_type": "scatter",
+                "weight_fixed": 1
+              }
+            }
+          ],
+          "layout": {
+            "x": 64,
+            "y": 12,
+            "w": 64,
+            "h": 14,
+            "i": 15
+          }
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "showDynamicFilters": false,
+    "list": []
+  }
+}

@@ -1,0 +1,6 @@
+name: sigma_susp_shell_child_process_from_parent_tmp_folder
+mode: alert
+eval: |
+  (
+    false /* ParentImage|startswith: parent executable path not available, only process_pname accessible */ && (e.process_name == "bash" || e.process_name == "csh" || e.process_name == "dash" || e.process_name == "fish" || e.process_name == "ksh" || e.process_name == "sh" || e.process_name == "zsh")
+  )

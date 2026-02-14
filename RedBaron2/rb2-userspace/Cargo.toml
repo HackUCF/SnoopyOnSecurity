@@ -4,23 +4,47 @@ version = "1.0.0"
 edition = "2024"
 
 [dependencies]
-flying-ace-engine = { path = "../flying-ace-engine" }
+age         = { version = "0.11.2", default-features = false, features = ["ssh"] }
 anyhow      = { version = "1.0.100", default-features = false }
+asciicastlib = { path = "../asciicastlib" }
 async-trait = { version = "0.1.89", default-features = false }
 aya         = { version = "0.13.1", default-features = false, features = ["async_tokio"] }
+base64      = { version = "0.22.1", default-features = false }
 bytes       = { version = "1.11.0", default-features = false }
-chrono      = { version = "0.4.42", default-features = false, features = ["alloc", "clock"] }
-env_logger  = { version = "0.11.8", default-features = false, features = ["auto-color"] }
+bzip2       = { version = "0.6.1", default-features = false, features = ["bzip2-sys"] }
+chrono      = { version = "0.4.43", default-features = false, features = ["alloc", "clock"] }
+flate2      = { version = "1.1.8" }
+flying-ace-engine = { path = "../flying-ace-engine" }
 iptables    = { version = "0.6.0", default-features = false }
-libc        = { version = "0.2.178", default-features = false }
+libc        = { version = "0.2.180", default-features = false }
 linux-audit-parser = { version = "0.2.7", default-features = false }
 log         = { version = "0.4.29", default-features = false, features = ["release_max_level_debug"] }
+log4rs      = { version = "1.4.0", default-features = false, features = [
+  "console_appender",
+  "rolling_file_appender",
+  "compound_policy",
+  "size_trigger",
+  "fixed_window_roller",
+  "pattern_encoder",
+  "threshold_filter",
+  "gzip",
+  "background_rotation",
+] }
+lru         = { version = "0.16.3", default-features = false }
+md5         = { version = "0.8.0", default-features = false }
 nfq         = { version = "0.2.5", default-features = false }
+nix         = { version = "0.30.1", features = ["uio", "process", "fs", "fanotify"] }
+object      = { version = "0.38.1", default-features = false, features = ["read"] }
 once_cell   = { version = "1.21.3", default-features = false }
+rusty-s3    = { version = "0.8.1", default-features = false, features = ["full"] }
+sd-notify   = { version = "0.4.5", default-features = false }
+serde_json  = { version = "1.0.149", default-features = false }
+sha1        = { version = "0.10.6", default-features = false }
+sha2        = { version = "0.10.9", default-features = false }
+sqlx        = { version = "0.8.6", default-features = false, features = ["runtime-tokio", "sqlite"] }
 sysinfo     = { version = "0.37.2", default-features = false, features = ["system"] }
 tar         = { version = "0.4.44", default-features = false }
-tokio-stream = { version = "0.1.17", default-features = false }
-tokio       = { version = "1.48.0", default-features = false, features = [
+tokio       = { version = "1.49.0", default-features = false, features = [
   "time",
   "macros",
   "rt",
@@ -33,13 +57,11 @@ tokio       = { version = "1.48.0", default-features = false, features = [
   "process",
 ] }
 ureq        = { version = "3.1.4", default-features = false, features = ["rustls"] }
+uuid        = { version = "1.20.0", default-features = false, features = ["v4", "std"] }
 xxhash-rust = { version = "0.8.15", features = ["xxh3"] }
 xz2         = { version = "0.1.7", default-features = false }
 yaml-rust2  = { version = "0.11.0", default-features = false }
-yara-x      = { version = "1.5", default-features = false }
-serde_json  = { version = "1.0.145", default-features = false }
-regex       = { version = "1.12.2", default-features = false }
-base64      = { version = "0.22.1", default-features = false }
+yara-x      = { version = "1.12.0", default-features = false, features = ["fast-regexp", "inventory", "constant-folding"] }
 
 [build-dependencies]
 xz2 = { version = "0.1.7", default-features = false }
@@ -47,3 +69,7 @@ xz2 = { version = "0.1.7", default-features = false }
 [[bin]]
 name = "rb2"
 path = "src/main.rs"
+
+[[bin]]
+name = "decrypt_cast"
+path = "src/bin/decrypt_cast.rs"

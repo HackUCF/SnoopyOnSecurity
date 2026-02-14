@@ -1,0 +1,22 @@
+---
+- name: Skip if log cleanup is disabled
+  ansible.builtin.meta: end_host
+  when: not (log_cleanup_enabled | default(false) | bool)
+
+- name: Find .gz log files older than {{ log_cleanup_max_age_days }} days
+  ansible.builtin.find:
+    paths: /var/log
+    patterns: "*.gz"
+    recurse: true
+    age: "{{ log_cleanup_max_age_days }}d"
+    age_stamp: mtime
+  register: old_logs
+
+- name: Remove old .gz log files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ old_logs.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: old_logs.matched > 0

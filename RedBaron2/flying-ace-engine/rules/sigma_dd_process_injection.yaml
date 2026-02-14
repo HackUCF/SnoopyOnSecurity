@@ -1,0 +1,6 @@
+name: sigma_dd_process_injection
+mode: alert
+eval: |
+  (
+    e.process_name == "dd" && (e.process_args.contains("of=") && e.process_args.contains("/proc/") && e.process_args.contains("/mem"))
+  )

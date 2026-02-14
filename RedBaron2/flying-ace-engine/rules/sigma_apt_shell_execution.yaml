@@ -1,0 +1,6 @@
+name: sigma_apt_shell_execution
+mode: alert
+eval: |
+  (
+    (e.process_name == "apt" || e.process_name == "apt-get") && e.process_args.contains("APT::Update::Pre-Invoke::=")
+  )

@@ -4,8 +4,11 @@ use anyhow::Context;
 use async_trait::async_trait;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
-use log::{debug, error, info, warn};
+use flate2::Compression;
+use flate2::write::GzEncoder;
+use log::{debug, error, warn};
 use serde_json::json;
+use std::io::Write;
 use std::sync::Arc;
 
 pub struct OpenObserveIngestor {
@@ -14,7 +17,7 @@ pub struct OpenObserveIngestor {
 
 struct State {
     url: String,
-    stream: String,
+    stream_prefix: String,
     auth_header: String,
     agent: ureq::Agent,
 }
@@ -22,7 +25,7 @@ struct State {
 impl OpenObserveIngestor {
     pub fn new(cfg: OpenObserveConfig) -> anyhow::Result<Self> {
         let url = format!("{}/api/{}/_bulk", cfg.url, cfg.org);
-        let stream = cfg.stream.clone();
+        let stream_prefix = cfg.stream_prefix.clone();
         let auth_header = basic_auth_header(&cfg.username, &cfg.password);
 
         let agent: ureq::Agent = ureq::Agent::config_builder()
@@ -33,7 +36,7 @@ impl OpenObserveIngestor {
         Ok(Self {
             state: Arc::new(State {
                 url,
-                stream,
+                stream_prefix,
                 auth_header,
                 agent,
             }),
@@ -42,11 +45,12 @@ impl OpenObserveIngestor {
 
     fn format_ndjson(&self, records: &[LogRecord]) -> anyhow::Result<String> {
         let mut ndjson = String::new();
-        let action = json!({
-            "index": { "_index": self.state.stream }
-        });
 
         for record in records {
+            let stream = format!("{}-{}", self.state.stream_prefix, record.log_type);
+            let action = json!({
+                "index": { "_index": stream }
+            });
             ndjson.push_str(&serde_json::to_string(&action)?);
             ndjson.push('\n');
             ndjson.push_str(&serde_json::to_string(&record.record)?);
@@ -69,9 +73,9 @@ impl Ingestor for OpenObserveIngestor {
             .context("Failed to format records as NDJSON")?;
 
         debug!(
-            "Sending {} records to OpenObserve (stream: {}, url: {}, payload: {} bytes)",
+            "Sending {} records to OpenObserve (stream_prefix: {}, url: {}, payload: {} bytes)",
             records.len(),
-            self.state.stream,
+            self.state.stream_prefix,
             self.state.url,
             ndjson.len()
         );
@@ -83,10 +87,6 @@ impl Ingestor for OpenObserveIngestor {
             .context("Failed to join blocking task for HTTP request")?
             .context("Failed to send logs to OpenObserve")?;
 
-        info!(
-            "Successfully ingested {} records to OpenObserve",
-            records.len()
-        );
         Ok(())
     }
 
@@ -101,20 +101,42 @@ struct OpenObserveSend {
 }
 
 impl OpenObserveSend {
+    fn gzip_compress(data: &[u8]) -> anyhow::Result<Vec<u8>> {
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::fast());
+        encoder
+            .write_all(data)
+            .context("Failed to write data to gzip encoder")?;
+        encoder
+            .finish()
+            .context("Failed to finish gzip compression")
+    }
+
     fn send(self) -> anyhow::Result<()> {
+        let raw_bytes = self.ndjson.as_bytes();
+        let compressed =
+            Self::gzip_compress(raw_bytes).context("Failed to gzip compress payload")?;
+
+        debug!(
+            "Gzip compressed payload: {} -> {} bytes ({:.0}% reduction)",
+            raw_bytes.len(),
+            compressed.len(),
+            (1.0 - compressed.len() as f64 / raw_bytes.len() as f64) * 100.0
+        );
+
         let mut resp = self
             .state
             .agent
             .post(&self.state.url)
             .header("Authorization", &self.state.auth_header)
             .header("Content-Type", "application/x-ndjson")
-            .send(self.ndjson.as_str())
+            .header("Content-Encoding", "gzip")
+            .send(compressed.as_slice())
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "OpenObserve HTTP request failed: {} (url: {}, stream: {})",
+                    "OpenObserve HTTP request failed: {} (url: {}, stream_prefix: {})",
                     e,
                     self.state.url,
-                    self.state.stream
+                    self.state.stream_prefix
                 )
             })?;
 
@@ -183,8 +205,8 @@ impl OpenObserveSend {
 
     fn handle_error(&self, status: ureq::http::StatusCode, body: &str) {
         error!(
-            "OpenObserve returned non-success status {}: {} (url: {}, stream: {})",
-            status, body, self.state.url, self.state.stream
+            "OpenObserve returned non-success status {}: {} (url: {}, stream_prefix: {})",
+            status, body, self.state.url, self.state.stream_prefix
         );
 
         let Ok(v) = serde_json::from_str::<serde_json::Value>(body) else {

@@ -1,5 +1,15 @@
 name: privileged_user_uid0
+mode: alert
 eval: |
   (
     e.user_id == 0
   )
+tests:
+  - cleartext: "any command as root (uid 0)"
+    process_name: bash
+    user_id: 0
+    should_match: true
+  - cleartext: "any command as regular user (uid 1000)"
+    process_name: bash
+    user_id: 1000
+    should_match: false

@@ -1,0 +1,38 @@
+---
+# Variable: password_skip_user_regex
+# Regex pattern to skip users matching this pattern
+# Skips users starting with 'seccdc' or matching 'blackteam_adm'
+# Default: '^(seccdc|blackteam_adm$)'
+
+- name: Load passwd database
+  ansible.builtin.getent:
+    database: passwd
+  tags:
+    - change_passwords
+    - lockdown
+
+- name: Load shadow database
+  ansible.builtin.getent:
+    database: shadow
+  tags:
+    - change_passwords
+    - lockdown
+
+- name: Change user passwords
+  ansible.builtin.user:
+    name: "{{ item.key }}"
+    password: "{{ user_password | password_hash('sha512') }}"
+    update_password: always
+  loop: "{{ getent_passwd | dict2items }}"
+  when:
+    - (item.value[4] | default('')) | length > 0
+    - user_password is defined
+    - user_password | length > 0
+    - item.key in getent_shadow
+    - getent_shadow[item.key][0] | default('') != ''
+    - getent_shadow[item.key][0] | default('') not in ['*', '!', '!!', '*LK*']
+    - item.key is not regex(password_skip_user_regex | default('^(seccdc|blackteam_adm$)'))
+  tags:
+    - change_passwords
+    - lockdown
+  #no_log: true

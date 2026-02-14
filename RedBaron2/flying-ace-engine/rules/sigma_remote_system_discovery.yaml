@@ -1,0 +1,6 @@
+name: sigma_remote_system_discovery
+mode: alert
+eval: |
+  (
+    (e.process_name == "arp" && e.process_args.contains("-a")) || (e.process_name == "ping" && (e.process_args.contains(" 10.") || e.process_args.contains(" 192.168.") || e.process_args.contains(" 172.16.") || e.process_args.contains(" 172.17.") || e.process_args.contains(" 172.18.") || e.process_args.contains(" 172.19.") || e.process_args.contains(" 172.20.") || e.process_args.contains(" 172.21.") || e.process_args.contains(" 172.22.") || e.process_args.contains(" 172.23.") || e.process_args.contains(" 172.24.") || e.process_args.contains(" 172.25.") /* truncated: 8 more value(s) omitted to stay within Rhai complexity limit */))
+  )

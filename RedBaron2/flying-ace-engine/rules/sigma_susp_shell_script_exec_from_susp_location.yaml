@@ -1,0 +1,6 @@
+name: sigma_susp_shell_script_exec_from_susp_location
+mode: alert
+eval: |
+  (
+    ((e.process_name == "bash" || e.process_name == "csh" || e.process_name == "dash" || e.process_name == "fish" || e.process_name == "ksh" || e.process_name == "sh" || e.process_name == "zsh")) && (e.process_args.contains(" -c ")) && (e.process_args.contains("/tmp/"))
+  )

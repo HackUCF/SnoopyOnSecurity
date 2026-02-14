@@ -9,25 +9,21 @@ fn new_engine() -> EcsRhaiEngine {
 fn base_event() -> ProcessEvent {
     ProcessEvent {
         timestamp: "2025-06-04T12:00:00Z".into(),
-        ecs_version: "8.11.0".into(),
-        event_kind: "event".into(),
-        event_category: "process".into(),
-        event_type: "start".into(),
-        event_action: None,
-        event_code: None,
-        event_module: None,
         process_name: String::new(),
         process_pid: 0,
+        process_sid: 0,
         process_args: None,
         process_executable: None,
         process_ppid: None,
         process_pname: None,
         process_working_directory: None,
-        host_name: None,
-        host_id: None,
         user_name: None,
         user_id: None,
-        agent_type: None,
+        event_category: String::new(),
+        event_module: None,
+        ecs_version: String::new(),
+        host_name: None,
+        host_id: None,
     }
 }
 

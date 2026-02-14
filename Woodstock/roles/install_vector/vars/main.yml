@@ -1,0 +1,12 @@
+---
+install_vector_install_script_path: /tmp/vector-install.sh
+install_vector_config_path: /etc/vector/vector.yml
+install_vector_openobserve_org: "default"
+install_vector_openobserve_stream: "auditd"
+
+# Noisy binaries/strings to drop from auditd logs in Vector
+# Matches against the full process.command field (contains check)
+install_vector_auditd_exclude_commands:
+  - "/usr/bin/redis-cli"
+  - "/usr/local/bin/vector"
+  - "/usr/bin/rb2"

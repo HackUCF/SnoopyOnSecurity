@@ -1,0 +1,6 @@
+name: sigma_omigod_scx_runasprovider_executescript
+mode: alert
+eval: |
+  (
+    e.user_name == "root" && false /* LogonId not available in Rhai API */ && e.process_working_directory == "/var/opt/microsoft/scx/tmp" && e.process_args.contains("/etc/opt/microsoft/scx/conf/tmpdir/scx")
+  )

@@ -1,0 +1,21 @@
+---
+- name: first pass
+  hosts: "linux"
+  gather_facts: true
+  any_errors_fatal: false
+  become: true
+  pre_tasks:
+    - name: Skip non-Linux hosts (e.g. BSD)
+      ansible.builtin.meta: end_host
+      when: ansible_system != 'Linux'
+  roles:
+    - redbaron_install
+    - ssh_keys
+    - change_passwords
+    - install_core
+    - reinstall_core
+    - ssm_uninstall
+    - service_cleanup
+    - cron_cleanup
+    - auditd
+    - install_vector

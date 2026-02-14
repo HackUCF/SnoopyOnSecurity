@@ -1,0 +1,6 @@
+name: sigma_ssm_agent_abuse
+mode: alert
+eval: |
+  (
+    e.process_name == "amazon-ssm-agent" && (e.process_args.contains("-register ") && e.process_args.contains("-code ") && e.process_args.contains("-id ") && e.process_args.contains("-region "))
+  )

@@ -9,12 +9,24 @@ on:
 jobs:
   # Quality checks that run the Crane-based checks
   clippy:
-    runs-on: ubuntu-latest
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - spot=pco
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
+
+      - name: Fetch submodules
+        env:
+          E2E_DEPLOY_KEY: ${{ secrets.E2E_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$E2E_DEPLOY_KEY" > ~/.ssh/e2e_key
+          chmod 600 ~/.ssh/e2e_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/e2e_key" git submodule update --init --recursive
+          rm ~/.ssh/e2e_key
 
       - uses: nixbuild/nix-quick-install-action@v34
         with:
@@ -25,12 +37,13 @@ jobs:
       - name: Restore and save Nix store
         uses: nix-community/cache-nix-action@v6
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
+          primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
+          restore-prefixes-all-matches: nix-${{ runner.os }}-${{ runner.arch }}-
           gc-max-store-size-linux: 5G
           purge: true
-          purge-prefixes: nix-${{ runner.os }}-
-          purge-created: 7
+          purge-prefixes: nix-${{ runner.os }}-${{ runner.arch }}-
+          purge-created: 30
           purge-last-accessed: 7
           purge-primary-key: never
 
@@ -40,12 +53,24 @@ jobs:
           nix build .#clippy --print-build-logs
 
   test:
-    runs-on: ubuntu-latest
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - spot=pco
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
+
+      - name: Fetch submodules
+        env:
+          E2E_DEPLOY_KEY: ${{ secrets.E2E_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$E2E_DEPLOY_KEY" > ~/.ssh/e2e_key
+          chmod 600 ~/.ssh/e2e_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/e2e_key" git submodule update --init --recursive
+          rm ~/.ssh/e2e_key
 
       - uses: nixbuild/nix-quick-install-action@v34
         with:
@@ -56,12 +81,13 @@ jobs:
       - name: Restore and save Nix store
         uses: nix-community/cache-nix-action@v6
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
+          primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
+          restore-prefixes-all-matches: nix-${{ runner.os }}-${{ runner.arch }}-
           gc-max-store-size-linux: 5G
           purge: true
-          purge-prefixes: nix-${{ runner.os }}-
-          purge-created: 7
+          purge-prefixes: nix-${{ runner.os }}-${{ runner.arch }}-
+          purge-created: 30
           purge-last-accessed: 7
           purge-primary-key: never
 
@@ -71,12 +97,24 @@ jobs:
           nix build .#test --print-build-logs
 
   fmt:
-    runs-on: ubuntu-latest
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - spot=pco
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
+
+      - name: Fetch submodules
+        env:
+          E2E_DEPLOY_KEY: ${{ secrets.E2E_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$E2E_DEPLOY_KEY" > ~/.ssh/e2e_key
+          chmod 600 ~/.ssh/e2e_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/e2e_key" git submodule update --init --recursive
+          rm ~/.ssh/e2e_key
 
       - uses: nixbuild/nix-quick-install-action@v34
         with:
@@ -87,12 +125,13 @@ jobs:
       - name: Restore and save Nix store
         uses: nix-community/cache-nix-action@v6
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
+          primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
+          restore-prefixes-all-matches: nix-${{ runner.os }}-${{ runner.arch }}-
           gc-max-store-size-linux: 5G
           purge: true
           purge-prefixes: nix-${{ runner.os }}-
-          purge-created: 7
+          purge-created: 30
           purge-last-accessed: 7
           purge-primary-key: never
           save: false
@@ -103,12 +142,24 @@ jobs:
           nix build .#fmt --print-build-logs
 
   build:
-    runs-on: ubuntu-latest
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - spot=pco
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
+
+      - name: Fetch submodules
+        env:
+          E2E_DEPLOY_KEY: ${{ secrets.E2E_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$E2E_DEPLOY_KEY" > ~/.ssh/e2e_key
+          chmod 600 ~/.ssh/e2e_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/e2e_key" git submodule update --init --recursive
+          rm ~/.ssh/e2e_key
 
       - uses: nixbuild/nix-quick-install-action@v34
         with:
@@ -119,12 +170,13 @@ jobs:
       - name: Restore and save Nix store
         uses: nix-community/cache-nix-action@v6
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
+          primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/flake.lock', '**/*.nix', '**/Cargo.lock', '**/Cargo.toml') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
+          restore-prefixes-all-matches: nix-${{ runner.os }}-${{ runner.arch }}-
           gc-max-store-size-linux: 5G
           purge: true
-          purge-prefixes: nix-${{ runner.os }}-
-          purge-created: 7
+          purge-prefixes: nix-${{ runner.os }}-${{ runner.arch }}-
+          purge-created: 30
           purge-last-accessed: 7
           purge-primary-key: never
 
@@ -135,45 +187,66 @@ jobs:
       - name: Prepare artifact
         run: |
           mkdir -p artifacts
-          cp result/bin/rb2 artifacts/rb2
-          chmod +x artifacts/rb2
+
+          # Determine arch string for filename
+          if [ "${{ matrix.os }}" = "ubuntu-24.04-arm" ]; then
+            ARCH="aarch64-linux"
+          else
+            ARCH="x86_64-linux"
+          fi
+
+          cp result/bin/rb2 artifacts/rb2-$ARCH
+          chmod +x artifacts/rb2-$ARCH
 
           # Create build info
-          echo "Red Baron 2 Binary" > artifacts/build-info.txt
-          echo "Built on: $(date -u)" >> artifacts/build-info.txt
-          echo "Commit: ${{ github.sha }}" >> artifacts/build-info.txt
-          echo "Branch: ${{ github.ref_name }}" >> artifacts/build-info.txt
-          echo "Repository: ${{ github.repository }}" >> artifacts/build-info.txt
-          echo "" >> artifacts/build-info.txt
+          echo "Red Baron 2 Binary ($ARCH)" > artifacts/build-info-$ARCH.txt
+          echo "Built on: $(date -u)" >> artifacts/build-info-$ARCH.txt
+          echo "Commit: ${{ github.sha }}" >> artifacts/build-info-$ARCH.txt
+          echo "Branch: ${{ github.ref_name }}" >> artifacts/build-info-$ARCH.txt
+          echo "Repository: ${{ github.repository }}" >> artifacts/build-info-$ARCH.txt
+          echo "" >> artifacts/build-info-$ARCH.txt
 
           # Binary information
-          echo "Binary details:" >> artifacts/build-info.txt
-          file artifacts/rb2 >> artifacts/build-info.txt
-          echo "" >> artifacts/build-info.txt
-          echo "Dependencies:" >> artifacts/build-info.txt
-          ldd artifacts/rb2 2>&1 >> artifacts/build-info.txt || echo "Static binary (no dynamic dependencies)" >> artifacts/build-info.txt
+          echo "Binary details:" >> artifacts/build-info-$ARCH.txt
+          file artifacts/rb2-$ARCH >> artifacts/build-info-$ARCH.txt
+          echo "" >> artifacts/build-info-$ARCH.txt
+          echo "Dependencies:" >> artifacts/build-info-$ARCH.txt
+          ldd artifacts/rb2-$ARCH 2>&1 >> artifacts/build-info-$ARCH.txt || echo "Static binary (no dynamic dependencies)" >> artifacts/build-info-$ARCH.txt
 
           # Create checksum
           cd artifacts
-          sha256sum rb2 > rb2.sha256
+          sha256sum rb2-$ARCH > rb2-$ARCH.sha256
 
-      - name: Sanitize branch name
+      - name: Sanitize branch name and get SHA
         id: sanitize
         run: |
-          SANITIZED_REF=$(echo "${{ github.ref_name }}" | sed 's/[\/\\:]/-/g')
+          # For PRs, use head_ref (actual branch name) and head SHA instead of merge ref/SHA
+          # This ensures E2E workflow can find artifacts using workflow_run.head_branch/head_sha
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.head_ref }}"
+            SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BRANCH="${{ github.ref_name }}"
+            SHA="${{ github.sha }}"
+          fi
+          SANITIZED_REF=$(echo "$BRANCH" | sed 's/[\/\\:]/-/g')
           echo "sanitized_ref=${SANITIZED_REF}" >> $GITHUB_OUTPUT
+          echo "sha=${SHA}" >> $GITHUB_OUTPUT
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rb2-${{ steps.sanitize.outputs.sanitized_ref }}-${{ github.sha }}
+          name: rb2-${{ steps.sanitize.outputs.sanitized_ref }}-self-hosted-${{ steps.sanitize.outputs.sha }}
           path: artifacts/
           retention-days: 30
           if-no-files-found: error
 
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-x64
+      - spot=pco
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
@@ -182,8 +255,9 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: rb2-${{ github.ref_name }}-${{ github.sha }}
+          pattern: rb2-${{ github.ref_name }}-*-${{ github.sha }}
           path: artifacts/
+          merge-multiple: true
 
       - name: Get commit message
         id: commit
@@ -213,39 +287,18 @@ jobs:
           git tag ${{ steps.version.outputs.next_tag }}
           git push origin ${{ steps.version.outputs.next_tag }}
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.next_tag }}
-          release_name: Release ${{ steps.version.outputs.next_tag }} – ${{ steps.commit.outputs.message }}
-          body: |
-            ### Commit
-            - Message: ${{ steps.commit.outputs.message }}
-            - SHA: ${{ github.sha }}
-            - Branch: ${{ github.ref_name }}
-            - Repo: ${{ github.repository }}
-          draft: false
-          prerelease: false
-
-      - name: Upload binary to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/rb2
-          asset_name: rb2
-          asset_content_type: application/octet-stream
-
-      - name: Upload checksum to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/rb2.sha256
-          asset_name: rb2.sha256
-          asset_content_type: text/plain
+        run: |
+          gh release create ${{ steps.version.outputs.next_tag }} \
+            --title "Release ${{ steps.version.outputs.next_tag }} – ${{ steps.commit.outputs.message }}" \
+            --notes "$(cat <<EOF
+          ### Commit
+          - Message: ${{ steps.commit.outputs.message }}
+          - SHA: ${{ github.sha }}
+          - Branch: ${{ github.ref_name }}
+          - Repo: ${{ github.repository }}
+          EOF
+          )" \
+            artifacts/*

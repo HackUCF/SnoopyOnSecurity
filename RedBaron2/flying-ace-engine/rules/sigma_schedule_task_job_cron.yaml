@@ -1,0 +1,6 @@
+name: sigma_schedule_task_job_cron
+mode: alert
+eval: |
+  (
+    re_match(e.process_name, "crontab$") && e.process_args.contains("/tmp/")
+  )

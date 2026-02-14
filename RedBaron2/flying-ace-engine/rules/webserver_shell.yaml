@@ -1,0 +1,51 @@
+name: webserver_shell_spawn
+mode: alert
+eval: |
+  (
+    (
+      e.process_pname == "httpd" ||
+      e.process_pname == "apache2" ||
+      e.process_pname == "nginx" ||
+      e.process_pname == "php-fpm" ||
+      e.process_pname == "php-cgi" ||
+      e.process_pname == "lighttpd"
+    ) &&
+    (
+      e.process_name == "bash" ||
+      e.process_name == "sh" ||
+      e.process_name == "dash" ||
+      e.process_name == "zsh" ||
+      e.process_name == "ksh"
+    )
+  )
+tests:
+  - cleartext: "httpd spawns: sh -c id"
+    process_name: sh
+    process_args: "sh -c id"
+    process_pname: httpd
+    should_match: true
+  - cleartext: "apache2 spawns: bash -c whoami"
+    process_name: bash
+    process_args: "bash -c whoami"
+    process_pname: apache2
+    should_match: true
+  - cleartext: "nginx spawns: sh -c cat /etc/passwd"
+    process_name: sh
+    process_args: "sh -c cat /etc/passwd"
+    process_pname: nginx
+    should_match: true
+  - cleartext: "php-fpm spawns: bash -i"
+    process_name: bash
+    process_args: "bash -i"
+    process_pname: php-fpm
+    should_match: true
+  - cleartext: "sshd spawns: bash (normal login)"
+    process_name: bash
+    process_args: "bash"
+    process_pname: sshd
+    should_match: false
+  - cleartext: "httpd spawns: php-fpm (normal operation)"
+    process_name: php-fpm
+    process_args: "php-fpm"
+    process_pname: httpd
+    should_match: false

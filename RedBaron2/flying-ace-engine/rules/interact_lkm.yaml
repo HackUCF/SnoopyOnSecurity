@@ -1,0 +1,7 @@
+name: interact_lkm
+mode: alert
+eval: |
+  (
+    e.process_name == "insmod" ||
+    e.process_name == "modprobe"
+  )

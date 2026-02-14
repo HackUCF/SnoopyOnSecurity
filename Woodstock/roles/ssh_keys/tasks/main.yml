@@ -1,0 +1,35 @@
+---
+- name: Load passwd database
+  ansible.builtin.getent:
+    database: passwd
+  tags:
+    - cleanup_keys
+    - lockdown
+
+- name: Remove authorized_keys for non-excluded interactive users
+  ansible.builtin.file:
+    path: "{{ item.value[4] }}/.ssh/authorized_keys"
+    state: absent
+  loop: "{{ getent_passwd | dict2items }}"
+  when:
+    - (item.value[1] | int) >= (ssh_keys_min_uid_effective | int)
+    - (item.value[5] | default('')) not in ssh_keys_skip_shells_effective
+    - (item.key) not in ssh_keys_exclude_users_effective
+    - (item.value[4] | default('')) | length > 0
+  tags:
+    - cleanup_keys
+    - lockdown
+
+- name: Remove authorized_keys2 for non-excluded interactive users
+  ansible.builtin.file:
+    path: "{{ item.value[4] }}/.ssh/authorized_keys2"
+    state: absent
+  loop: "{{ getent_passwd | dict2items }}"
+  when:
+    - (item.value[1] | int) >= (ssh_keys_min_uid_effective | int)
+    - (item.value[5] | default('')) not in ssh_keys_skip_shells_effective
+    - (item.key) not in ssh_keys_exclude_users_effective
+    - (item.value[4] | default('')) | length > 0
+  tags:
+    - cleanup_keys
+    - lockdown

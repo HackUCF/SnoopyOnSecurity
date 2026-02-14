@@ -1,0 +1,6 @@
+name: sigma_ssh_shell_execution
+mode: alert
+eval: |
+  (
+    (e.process_name == "ssh" && (e.process_args.contains("ProxyCommand=;") || e.process_args.contains("permitlocalcommand=yes") || e.process_args.contains("localhost"))) && ((e.process_args.contains("/bin/bash") || e.process_args.contains("/bin/dash") || e.process_args.contains("/bin/fish") || e.process_args.contains("/bin/sh") || e.process_args.contains("/bin/zsh") || e.process_args.contains("sh 0<&2 1>&2") || e.process_args.contains("sh 1>&2 0<&2")))
+  )

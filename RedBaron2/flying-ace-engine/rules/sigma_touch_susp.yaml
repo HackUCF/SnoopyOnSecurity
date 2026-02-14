@@ -1,0 +1,6 @@
+name: sigma_touch_susp
+mode: alert
+eval: |
+  (
+    e.process_name == "touch" && e.process_args.contains(" -t ") && e.process_args.ends_with(".service")
+  )

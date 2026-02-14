@@ -1,0 +1,6 @@
+name: sigma_susp_pipe_shell
+mode: alert
+eval: |
+  (
+    ((e.process_args.starts_with("sh -c ") || e.process_args.starts_with("bash -c "))) && (((e.process_args.contains("| bash ") || e.process_args.contains("| sh ") || e.process_args.contains("|bash ") || e.process_args.contains("|sh ")) || (e.process_args.ends_with("| bash") || e.process_args.ends_with("| sh") || e.process_args.ends_with("|bash") || e.process_args.ends_with(" |sh"))))
+  )

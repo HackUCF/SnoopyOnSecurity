@@ -1,0 +1,6 @@
+name: sigma_git_shell_execution
+mode: alert
+eval: |
+  (
+    e.process_pname == "git" && false /* ParentCommandLine not available in Rhai API */ && (e.process_args.contains("bash 0<&1") || e.process_args.contains("dash 0<&1") || e.process_args.contains("sh 0<&1"))
+  )

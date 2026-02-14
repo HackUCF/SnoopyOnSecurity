@@ -1,0 +1,11 @@
+---
+- name: Backup critical directories from all hosts
+  hosts: "linux:discovered_linux"
+  gather_facts: true
+  become: true
+  pre_tasks:
+    - name: Skip non-Linux hosts (e.g. BSD)
+      ansible.builtin.meta: end_host
+      when: ansible_system != 'Linux'
+  roles:
+    - backup_jumphost

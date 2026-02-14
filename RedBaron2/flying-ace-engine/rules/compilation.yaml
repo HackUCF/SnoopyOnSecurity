@@ -1,0 +1,45 @@
+name: compilation_detected
+mode: alert
+eval: |
+  (
+    e.process_name == "gcc" ||
+    e.process_name == "g++" ||
+    e.process_name == "cc" ||
+    e.process_name == "c++" ||
+    e.process_name == "clang" ||
+    e.process_name == "clang++" ||
+    e.process_name == "make" ||
+    e.process_name == "as" ||
+    e.process_name == "ld" ||
+    e.process_name == "rustc" ||
+    e.process_name == "cargo"
+  )
+tests:
+  - cleartext: "gcc exploit.c -o exploit"
+    process_name: gcc
+    process_args: "gcc exploit.c -o exploit"
+    should_match: true
+  - cleartext: "g++ -std=c++17 mal.cpp -o mal"
+    process_name: g++
+    process_args: "g++ -std=c++17 mal.cpp -o mal"
+    should_match: true
+  - cleartext: "make -j4"
+    process_name: make
+    process_args: "make -j4"
+    should_match: true
+  - cleartext: "clang -O2 test.c -o test"
+    process_name: clang
+    process_args: "clang -O2 test.c -o test"
+    should_match: true
+  - cleartext: "cc evil.c -o evil"
+    process_name: cc
+    process_args: "cc evil.c -o evil"
+    should_match: true
+  - cleartext: "rustc exploit.rs"
+    process_name: rustc
+    process_args: "rustc exploit.rs"
+    should_match: true
+  - cleartext: "python3 build.py (not a compiler)"
+    process_name: python3
+    process_args: "python3 build.py"
+    should_match: false

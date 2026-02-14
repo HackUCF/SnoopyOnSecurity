@@ -1,0 +1,16 @@
+---
+auditd_package_by_mgr:
+  apt: auditd
+  dnf: audit
+  yum: audit
+  dnf5: audit
+  zypper: audit
+  apk: audit
+
+# Audit rules configuration
+auditd_rules_file: /etc/audit/rules.d/audit.rules
+auditd_excludes_file: /etc/audit/rules.d/00-ccdc-excludes.rules
+
+# Noisy binaries to exclude from execve auditing
+auditd_exclude_binaries:
+  - /usr/bin/redis-cli

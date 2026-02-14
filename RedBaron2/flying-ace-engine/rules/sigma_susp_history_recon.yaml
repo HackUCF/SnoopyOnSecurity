@@ -1,0 +1,6 @@
+name: sigma_susp_history_recon
+mode: alert
+eval: |
+  (
+    ((e.process_name == "cat" || e.process_name == "head" || e.process_name == "tail" || e.process_name == "more")) && (((e.process_args.contains("/.bash_history") || e.process_args.contains("/.zsh_history")) || (e.process_args.ends_with("_history") || e.process_args.ends_with(".history") || e.process_args.ends_with("zhistory"))))
+  )

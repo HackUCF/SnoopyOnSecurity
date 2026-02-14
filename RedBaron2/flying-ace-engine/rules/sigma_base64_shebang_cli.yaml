@@ -1,0 +1,6 @@
+name: sigma_base64_shebang_cli
+mode: alert
+eval: |
+  (
+    (e.process_args.contains("IyEvYmluL2Jhc2") || e.process_args.contains("IyEvYmluL2Rhc2") || e.process_args.contains("IyEvYmluL3pza") || e.process_args.contains("IyEvYmluL2Zpc2") || e.process_args.contains("IyEvYmluL3No"))
+  )

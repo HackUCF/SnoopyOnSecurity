@@ -1,0 +1,14 @@
+---
+- name: Restart rb2 service on all hosts
+  hosts: linux
+  become: true
+  gather_facts: true
+  pre_tasks:
+    - name: Skip non-Linux hosts (e.g. BSD)
+      ansible.builtin.meta: end_host
+      when: ansible_system != 'Linux'
+  tasks:
+    - name: Restart rb2 service
+      ansible.builtin.service:
+        name: rb2
+        state: restarted

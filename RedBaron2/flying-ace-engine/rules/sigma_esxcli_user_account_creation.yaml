@@ -1,0 +1,6 @@
+name: sigma_esxcli_user_account_creation
+mode: alert
+eval: |
+  (
+    e.process_name == "esxcli" && (e.process_args.contains("system ") && e.process_args.contains("account ") && e.process_args.contains("add "))
+  )

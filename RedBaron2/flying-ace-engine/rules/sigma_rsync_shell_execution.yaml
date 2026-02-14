@@ -1,0 +1,6 @@
+name: sigma_rsync_shell_execution
+mode: alert
+eval: |
+  (
+    ((e.process_name == "rsync" || e.process_name == "rsyncd") && e.process_args.contains(" -e ")) && ((e.process_args.contains("/ash ") || e.process_args.contains("/bash ") || e.process_args.contains("/dash ") || e.process_args.contains("/csh ") || e.process_args.contains("/sh ") || e.process_args.contains("/zsh ") || e.process_args.contains("/tcsh ") || e.process_args.contains("/ksh ") || e.process_args.contains("'ash ") || e.process_args.contains("'bash ") || e.process_args.contains("'dash ") || e.process_args.contains("'csh ") /* truncated: 4 more value(s) omitted to stay within Rhai complexity limit */))
+  )

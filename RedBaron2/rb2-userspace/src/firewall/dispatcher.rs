@@ -1,22 +1,20 @@
-use super::common::{EventProducer, EventProducerImpl, FirewallEvent, Handler, HandlerImpl};
-use super::event::auditd::AuditdEventProducer;
 use super::event::ebpf::EbpfEventProducer;
 use super::event::nfq::NfqEventProducer;
 use super::handler::kill::KillFirewall;
 use super::handler::nfq::NfqFirewall;
 use super::sockets;
+use super::{EventProducer, EventProducerImpl, FirewallEvent, Handler, HandlerImpl};
 use crate::config::yaml::{FirewallConfig, HandlerConfig, ProducerConfig};
-use crate::log_file;
+use crate::misc::{get_hostname, get_machine_id};
 use anyhow::anyhow;
-use log::{debug, error, trace, warn};
+use chrono::SecondsFormat;
+use log::{debug, error, info, trace, warn};
 use std::collections::HashSet;
 use std::convert::Infallible;
 use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::fs::File;
-use tokio::sync::{Mutex, OnceCell, RwLock, mpsc};
+use tokio::sync::{RwLock, mpsc};
 
 pub async fn run_firewall(
     cfg: FirewallConfig,
@@ -27,7 +25,7 @@ pub async fn run_firewall(
 
     let (tx, rx) = mpsc::channel::<FirewallEvent>(1024);
 
-    clean_active_sockets(&cfg)?;
+    clean_active_sockets(&cfg).await;
 
     let fw_clone = firewall.clone();
     let fw_fut = fw_clone.run();
@@ -64,15 +62,12 @@ fn build_firewall(
 
     let producer = match &cfg.producer {
         ProducerConfig::Ebpf => EventProducerImpl::Ebpf(EbpfEventProducer { btf_file_path }),
-        ProducerConfig::Auditd => {
-            EventProducerImpl::Auditd(AuditdEventProducer::with_default_path())
-        }
         prod => {
             return Err(anyhow::anyhow!("Unsupported producer: {:?}", prod));
         }
     };
     let handler = match &cfg.handler {
-        HandlerConfig::Kill => HandlerImpl::Kill(KillFirewall {}),
+        HandlerConfig::Kill => HandlerImpl::Kill(KillFirewall::default()),
         hand => {
             return Err(anyhow::anyhow!("Unsupported handler: {:?}", hand));
         }
@@ -81,13 +76,34 @@ fn build_firewall(
     Ok((handler, producer))
 }
 
-fn clean_active_sockets(cfg: &FirewallConfig) -> io::Result<()> {
+async fn clean_active_sockets(cfg: &FirewallConfig) {
     let paths = &cfg.binary_whitelist;
-    sockets::enumerate_udp_sockets(paths, cfg.enforcing)?;
-    sockets::enumerate_tcp_sockets(paths, cfg.enforcing)?;
-    debug!("Existing sockets parsed by firewall");
 
-    Ok(())
+    let mut offenders = match sockets::enumerate_udp_sockets(paths, cfg.enforcing).await {
+        Ok(o) => o,
+        Err(e) => {
+            warn!("Failed to enumerate UDP sockets: {}", e);
+            Vec::new()
+        }
+    };
+    match sockets::enumerate_tcp_sockets(paths, cfg.enforcing).await {
+        Ok(o) => offenders.extend(o),
+        Err(e) => warn!("Failed to enumerate TCP sockets: {}", e),
+    }
+
+    for o in offenders {
+        let ev = FirewallEvent {
+            pid: o.pid,
+            comm: None,
+            ip: Some(o.ip.to_string()),
+            dport: Some(o.port),
+            op: Some("existing_socket".to_string()),
+        };
+
+        log_event(&ev, Some(PathBuf::from(o.exe_path)), false, cfg.enforcing).await;
+    }
+
+    debug!("Existing sockets parsed by firewall");
 }
 
 /// Will not take into account if the firewall should be enforcing or not here
@@ -95,16 +111,14 @@ pub fn make_decision(ev: &FirewallEvent, allow: &HashSet<PathBuf>) -> (bool, Opt
     let path = fs::read_link(format!("/proc/{}/exe", ev.pid)).ok();
 
     let decision = path.as_ref().map(|p| allow.contains(p)).unwrap_or_else(|| {
-        warn!("Failed to resolve path for pid {}", ev.pid);
+        // only make a debug message bc kill handler will be racy with new events
+        debug!("Failed to resolve path for pid {}", ev.pid);
         false
     });
 
     debug!(
-        "Firewall making a decision decision={} on pid={} path={:?} context={}",
-        decision,
-        ev.pid,
-        path,
-        ev.context.as_deref().unwrap_or("")
+        "Firewall making a decision decision={} on pid={} path={:?}",
+        decision, ev.pid, path,
     );
 
     (decision, path)
@@ -113,67 +127,63 @@ pub fn make_decision(ev: &FirewallEvent, allow: &HashSet<PathBuf>) -> (bool, Opt
 // dedup duplicate consecutive events in logfile
 static EVENT_CACHE: RwLock<Option<(FirewallEvent, Option<PathBuf>)>> = RwLock::const_new(None);
 
-async fn log_event(
-    log_file: &Path,
-    ev: &FirewallEvent,
-    path: Option<PathBuf>,
-    dec: bool,
-) -> io::Result<()> {
+async fn log_event(ev: &FirewallEvent, path: Option<PathBuf>, dec: bool, enforcing: bool) {
+    // path we'll use for logging + caching.
+    let mut saved_path = None;
+
     {
         let e = EVENT_CACHE.read().await;
-        if let Some((cached_ev, cached_path)) = e.as_ref()
-            && cached_ev == ev
-            && cached_path.as_ref() == path.as_ref()
-        {
-            return Ok(());
+        if let Some((cached_ev, cached_path)) = e.as_ref() {
+            // dedup event check
+            if cached_ev == ev && cached_path.as_ref() == path.as_ref() {
+                return;
+            }
+
+            // partial match to backfill path when current is None
+            if path.is_none() && cached_ev.pid == ev.pid && cached_ev.comm == ev.comm {
+                saved_path = cached_path.clone();
+            }
         }
     }
 
-    *EVENT_CACHE.write().await = Some((ev.clone(), path.clone()));
+    let eff_path = if saved_path.is_some() {
+        saved_path
+    } else {
+        path
+    };
+    *EVENT_CACHE.write().await = Some((ev.clone(), eff_path.clone()));
 
-    let path_str = path
+    let path_str = eff_path
+        .as_ref()
         .map(|p| p.display().to_string())
         .unwrap_or_else(|| "<unknown>".to_string());
 
-    let msg = format!(
-        "{} pid={} path={}{}",
+    let ts = chrono::Local::now().to_rfc3339_opts(SecondsFormat::Millis, true);
+
+    let json = serde_json::json!({
+        "timestamp": ts,
+        "decision": if dec { "ALLOW" } else { "DENY" },
+        "enforcing": enforcing,
+        "pid": ev.pid,
+        "path": path_str,
+        "comm": ev.comm,
+        "ip": ev.ip,
+        "port": ev.dport,
+        "op": ev.op,
+        "host_name": get_hostname(),
+        "host_id": get_machine_id(),
+    });
+
+    trace!(
+        "firewall {} pid={} path={} ip={:?} port={:?}",
         if dec { "ALLOW" } else { "DENY" },
         ev.pid,
         path_str,
-        if let Some(context) = &ev.context {
-            format!(" context={}", context)
-        } else {
-            "".to_string()
-        },
+        ev.ip,
+        ev.dport
     );
 
-    trace!("{}", msg);
-
-    // Open file, recreate if needed
-    if let Err(e) = write_with_logfile(log_file, &msg).await {
-        warn!("Failed to write to log file: {}", e);
-    }
-    Ok(())
-}
-
-static LOG_FD: OnceCell<Mutex<Option<(PathBuf, File)>>> = OnceCell::const_new();
-
-async fn write_with_logfile(log_file: &Path, msg: &str) -> io::Result<()> {
-    let lock = LOG_FD.get_or_init(|| async { Mutex::new(None) }).await;
-    let mut guard = lock.lock().await;
-
-    let need_open = match guard.as_ref() {
-        Some((p, _)) => p.as_path() != log_file,
-        None => true,
-    };
-
-    if need_open {
-        let f = log_file::open_log_file_async(log_file).await?;
-        *guard = Some((log_file.to_path_buf(), f));
-    }
-
-    let (_, f) = guard.as_mut().expect("just ensured Some");
-    log_file::write_log_line_with_timestamp_async(f, log_file, msg).await
+    info!(target: "rb2_firewall", "{}", json);
 }
 
 async fn run_dispatcher(
@@ -184,16 +194,11 @@ async fn run_dispatcher(
     while let Some(ev) = src.recv().await {
         let (dec, path) = make_decision(&ev, &cfg.binary_whitelist);
 
-        let (log_res, handle_res) = tokio::join!(
-            log_event(&cfg.log_file, &ev, path, dec),
-            dst_firewall.handle_event(&ev, if cfg.enforcing { dec } else { true }),
-        );
+        let handle_res = dst_firewall.handle_event(&ev, if cfg.enforcing { dec } else { true });
 
-        if let Err(e) = log_res {
-            error!("Unable to log event: {e}");
-        }
+        log_event(&ev, path, dec, cfg.enforcing).await;
 
-        if let Err(e) = handle_res {
+        if let Err(e) = handle_res.await {
             error!("Unable to handle firewall event: {e}");
         }
     }

@@ -1,0 +1,6 @@
+name: sigma_clear_logs
+mode: alert
+eval: |
+  (
+    (e.process_name == "rm" || e.process_name == "shred" || e.process_name == "unlink") && (e.process_args.contains("/var/log") || e.process_args.contains("/var/spool/mail"))
+  )

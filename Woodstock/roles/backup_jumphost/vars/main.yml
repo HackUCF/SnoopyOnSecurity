@@ -1,0 +1,13 @@
+---
+backup_jumphost_root_dir_local: "{{ playbook_dir | dirname }}/backups"
+backup_jumphost_source_dirs:
+  - /var/www
+  - /etc
+  - /home
+  - /opt
+  - /root
+backup_jumphost_timestamp: "{{ ansible_date_time.date | replace('-', '') }}-{{ ansible_date_time.time | replace(':', '') }}"
+backup_jumphost_remote_backup_dir: /tmp/ccdc-backups
+backup_jumphost_remote_backup_path: "{{ backup_jumphost_remote_backup_dir }}/backup-{{ backup_jumphost_timestamp }}.tar.gz"
+backup_jumphost_local_backup_dir: "{{ backup_jumphost_root_dir_local }}/{{ inventory_hostname }}"
+backup_jumphost_local_backup_path: "{{ backup_jumphost_local_backup_dir }}/backup-{{ backup_jumphost_timestamp }}.tar.gz"

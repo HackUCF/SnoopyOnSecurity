@@ -1,0 +1,6 @@
+name: sigma_susp_chmod_directories
+mode: alert
+eval: |
+  (
+    e.process_name == "chmod" && (e.process_args.contains("/tmp/") || e.process_args.contains("/.Library/") || e.process_args.contains("/etc/") || e.process_args.contains("/opt/"))
+  )

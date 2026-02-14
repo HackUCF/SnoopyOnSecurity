@@ -1,0 +1,6 @@
+name: sigma_clipboard_collection
+mode: alert
+eval: |
+  (
+    e.process_executable.contains("xclip") && (e.process_args.contains("-sel") && e.process_args.contains("clip") && e.process_args.contains("-o"))
+  )

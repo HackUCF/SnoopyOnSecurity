@@ -1,0 +1,6 @@
+name: sigma_setgid_setuid
+mode: alert
+eval: |
+  (
+    (e.process_args.contains("chown root")) && ((e.process_args.contains(" chmod u+s") || e.process_args.contains(" chmod g+s")))
+  )

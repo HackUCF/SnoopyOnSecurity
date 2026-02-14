@@ -1,0 +1,6 @@
+name: sigma_mount_hidepid
+mode: alert
+eval: |
+  (
+    e.process_name == "mount" && (e.process_args.contains("hidepid=2") && e.process_args.contains(" -o "))
+  )

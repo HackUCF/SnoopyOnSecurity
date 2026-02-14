@@ -1,0 +1,11 @@
+- name: Bootstrap Safe user
+  hosts: "linux:discovered_linux"
+  gather_facts: true
+  strategy: free
+  become: true
+  pre_tasks:
+    - name: Skip non-Linux hosts (e.g. BSD)
+      ansible.builtin.meta: end_host
+      when: ansible_system != 'Linux'
+  roles:
+    - safe_user

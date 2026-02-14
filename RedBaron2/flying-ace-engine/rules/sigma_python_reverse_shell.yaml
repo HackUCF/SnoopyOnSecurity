@@ -1,0 +1,6 @@
+name: sigma_python_reverse_shell
+mode: alert
+eval: |
+  (
+    e.process_executable.contains("python") && (e.process_args.contains(" -c ") && e.process_args.contains("import") && e.process_args.contains("pty") && e.process_args.contains("socket") && e.process_args.contains("spawn") && e.process_args.contains(".connect"))
+  )

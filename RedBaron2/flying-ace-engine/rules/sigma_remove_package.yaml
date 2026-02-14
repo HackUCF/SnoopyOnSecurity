@@ -1,0 +1,6 @@
+name: sigma_remove_package
+mode: alert
+eval: |
+  (
+    (e.process_name == "yum" && (e.process_args.contains("erase") || e.process_args.contains("remove"))) || ((e.process_name == "apt" || e.process_name == "apt-get") && (e.process_args.contains("remove") || e.process_args.contains("purge"))) || (e.process_name == "dpkg" && (e.process_args.contains("--remove ") || e.process_args.contains(" -r "))) || (e.process_name == "rpm" && e.process_args.contains(" -e "))
+  )

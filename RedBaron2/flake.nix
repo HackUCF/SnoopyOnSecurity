@@ -7,7 +7,7 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     crane.url = "github:ipetkov/crane";
     yara-rules = {
-      url = "https://github.com/nmagill123/compiled-yara-rules-rb2/releases/download/v20260102-152737/linux.tar.xz";
+      url = "https://github.com/nmagill123/compiled-yara-rules-rb2/releases/download/v20260212-032645/linux.tar.xz";
       flake = false;
     };
   };
@@ -28,10 +28,19 @@
         pkgs = import nixpkgs { inherit system overlays; };
         lib = pkgs.lib;
 
-        muslPkgs = pkgs.pkgsCross.musl64;
+        # Determine target architecture and package set
+        isAarch64 = system == "aarch64-linux";
+        
+        muslPkgs = if isAarch64 
+          then pkgs.pkgsCross.aarch64-multiplatform-musl 
+          else pkgs.pkgsCross.musl64;
+
+        rustTarget = if isAarch64 
+          then "aarch64-unknown-linux-musl" 
+          else "x86_64-unknown-linux-musl";
 
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-          targets = [ "x86_64-unknown-linux-musl" ];
+          targets = [ rustTarget ];
         };
 
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
@@ -82,15 +91,28 @@
           LIBRARY_PATH = "${pkgsSet.elfutils}/lib:${pkgsSet.zlib}/lib:${pkgsSet.libbpf}/lib";
         };
 
-        muslCrossEnv = {
-          CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
-          CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER = "${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-gcc";
-          CC_x86_64_unknown_linux_musl = "${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-gcc";
-          CXX_x86_64_unknown_linux_musl = "${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-g++";
-          AR_x86_64_unknown_linux_musl = "${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-ar";
-          CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS = "-C target-feature=+crt-static -C link-arg=-lm";
-        }
-        // (nativeCEnv muslPkgs);
+        muslCrossEnv = 
+          let
+            cc = "${muslPkgs.stdenv.cc}/bin/${rustTarget}-gcc";
+            cxx = "${muslPkgs.stdenv.cc}/bin/${rustTarget}-g++";
+            ar = "${muslPkgs.stdenv.cc}/bin/${rustTarget}-ar";
+            linkerEnv = if isAarch64 then {
+              CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER = cc;
+              CC_aarch64_unknown_linux_musl = cc;
+              CXX_aarch64_unknown_linux_musl = cxx;
+              AR_aarch64_unknown_linux_musl = ar;
+              CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS = "-C target-feature=+crt-static -C link-arg=-lm";
+            } else {
+              CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER = cc;
+              CC_x86_64_unknown_linux_musl = cc;
+              CXX_x86_64_unknown_linux_musl = cxx;
+              AR_x86_64_unknown_linux_musl = ar;
+              CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS = "-C target-feature=+crt-static -C link-arg=-lm";
+            };
+          in
+          {
+            CARGO_BUILD_TARGET = rustTarget;
+          } // linkerEnv // (nativeCEnv muslPkgs);
 
         # One helper to make all crane builds with minimal duplication
         mkCrane =
@@ -242,12 +264,13 @@
             if [ ! -d yara_linux ]; then
               ${yaraRulesSetup}
             fi
+            
             # convenience exports for musl cross
-            export CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER="${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-gcc"
-            export CC_x86_64_unknown_linux_musl="${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-gcc"
-            export CXX_x86_64_unknown_linux_musl="${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-g++"
-            export AR_x86_64_unknown_linux_musl="${muslPkgs.stdenv.cc}/bin/x86_64-unknown-linux-musl-ar"
-            export CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-C target-feature=+crt-static -C link-arg=-lm"
+            export CARGO_TARGET_${if isAarch64 then "AARCH64" else "X86_64"}_UNKNOWN_LINUX_MUSL_LINKER="${muslPkgs.stdenv.cc}/bin/${rustTarget}-gcc"
+            export CC_${if isAarch64 then "aarch64" else "x86_64"}_unknown_linux_musl="${muslPkgs.stdenv.cc}/bin/${rustTarget}-gcc"
+            export CXX_${if isAarch64 then "aarch64" else "x86_64"}_unknown_linux_musl="${muslPkgs.stdenv.cc}/bin/${rustTarget}-g++"
+            export AR_${if isAarch64 then "aarch64" else "x86_64"}_unknown_linux_musl="${muslPkgs.stdenv.cc}/bin/${rustTarget}-ar"
+            export CARGO_TARGET_${if isAarch64 then "AARCH64" else "X86_64"}_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-C target-feature=+crt-static -C link-arg=-lm"
 
             echo "Development environment ready!"
             echo ""
@@ -261,7 +284,7 @@
             echo "  Check formatting: nix build .#fmt"
             echo ""
             echo "Output locations:"
-            echo "  Musl binary: target/x86_64-unknown-linux-musl/release/rb2"
+            echo "  Musl binary: target/${rustTarget}/release/rb2"
             echo "  Production binary: result/bin/rb2"
 
           '';

@@ -1,0 +1,6 @@
+name: sigma_grep_os_arch_discovery
+mode: alert
+eval: |
+  (
+    (e.process_name == "grep") && ((e.process_args.ends_with("aarch64") || e.process_args.ends_with("arm") || e.process_args.ends_with("i386") || e.process_args.ends_with("i686") || e.process_args.ends_with("mips") || e.process_args.ends_with("x86_64")))
+  )

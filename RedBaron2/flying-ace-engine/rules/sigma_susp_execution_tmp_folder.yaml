@@ -1,0 +1,6 @@
+name: sigma_susp_execution_tmp_folder
+mode: alert
+eval: |
+  (
+    (re_match(e.process_executable, "^/tmp/")) && (!((e.process_name == "nextcloud")))
+  )

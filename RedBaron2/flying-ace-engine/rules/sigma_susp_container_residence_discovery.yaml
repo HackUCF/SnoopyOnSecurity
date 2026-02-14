@@ -1,0 +1,6 @@
+name: sigma_susp_container_residence_discovery
+mode: alert
+eval: |
+  (
+    ((re_match(e.process_name, "awk$") || e.process_name == "cat" || re_match(e.process_name, "grep$") || e.process_name == "head" || e.process_name == "less" || e.process_name == "more" || e.process_name == "nl" || e.process_name == "tail")) && ((e.process_args.contains("/proc/2/")) || (e.process_args.contains("/proc/") && (e.process_args.ends_with("/cgroup") || e.process_args.ends_with("/sched"))))
+  )

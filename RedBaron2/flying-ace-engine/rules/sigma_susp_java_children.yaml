@@ -1,0 +1,6 @@
+name: sigma_susp_java_children
+mode: alert
+eval: |
+  (
+    e.process_pname == "java" && (e.process_args.contains("/bin/sh") || e.process_args.contains("bash") || e.process_args.contains("dash") || e.process_args.contains("ksh") || e.process_args.contains("zsh") || e.process_args.contains("csh") || e.process_args.contains("fish") || e.process_args.contains("curl") || e.process_args.contains("wget") || e.process_args.contains("python"))
+  )

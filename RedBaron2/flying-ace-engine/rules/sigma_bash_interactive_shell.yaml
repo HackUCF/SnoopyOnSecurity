@@ -1,0 +1,6 @@
+name: sigma_bash_interactive_shell
+mode: alert
+eval: |
+  (
+    e.process_name == "bash" && e.process_args.contains(" -i ")
+  )

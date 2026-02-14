@@ -1,0 +1,6 @@
+name: sigma_susp_find_execution
+mode: alert
+eval: |
+  (
+    e.process_name == "find" && (e.process_args.contains("-perm -4000") || e.process_args.contains("-perm -2000") || e.process_args.contains("-perm 0777") || e.process_args.contains("-perm -222") || e.process_args.contains("-perm -o w") || e.process_args.contains("-perm -o x") || e.process_args.contains("-perm -u=s") || e.process_args.contains("-perm -g=s"))
+  )

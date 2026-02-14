@@ -1,0 +1,27 @@
+---
+redbaron_install_firewall_enforcing: false
+
+# Feature flags — all enabled by default
+redbaron_install_features:
+  firewall: true
+  yara: true
+  process: true
+  tty: true
+  scan: true
+  ingestor: true
+
+# Ingestor configuration
+redbaron_install_ingestor_type: openobserve
+redbaron_install_ingestor_poll_interval_secs: 5
+redbaron_install_ingestor_stats_interval_secs: 120
+redbaron_install_ingestor_log_rollover_size_mb: 10
+redbaron_install_ingestor_stream_prefix: "rb2-logs"
+redbaron_install_ingestor_org: "default"
+
+redbaron_install_object_storage_enabled: true
+
+# S3 feature flags for YARA and TTY
+red_baron_move_binary_s3: true
+red_baron_forward_to_s3: true
+
+redbaron_install_tty_authorized_keys: "/etc/rb2-authorized_keys"

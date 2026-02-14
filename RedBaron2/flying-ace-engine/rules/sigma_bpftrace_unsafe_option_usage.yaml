@@ -1,0 +1,6 @@
+name: sigma_bpftrace_unsafe_option_usage
+mode: alert
+eval: |
+  (
+    re_match(e.process_name, "bpftrace$") && e.process_args.contains("--unsafe")
+  )

@@ -1,0 +1,5033 @@
+{
+  "version": 8,
+  "dashboardId": "7428143051391893504",
+  "title": "RB2 Security",
+  "description": "Unified security dashboard for RB2 streams (alerts, ssh, process, auditd, firewall, web, modsecurity, systemd, scan, yara)",
+  "role": "",
+  "owner": "",
+  "created": "2026-02-13T19:00:56.997653134Z",
+  "tabs": [
+    {
+      "tabId": "overview",
+      "name": "Overview",
+      "panels": [
+        {
+          "id": "Panel_ID7001",
+          "type": "area",
+          "title": "Alerts Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#c23531"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_alerts\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_alerts",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 1
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7002",
+          "type": "table",
+          "title": "Top Alert Rules",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#2f4554"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT rule_name as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_alerts\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 20",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_alerts",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "rule",
+                    "alias": "x_axis_1",
+                    "column": "rule_name",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "rule_name",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 64,
+            "h": 16,
+            "i": 2
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7003",
+          "type": "area",
+          "title": "SSH Accepted Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#3ba272"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"sshd_systemd\" WHERE message like '%Accepted %' GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 16,
+            "w": 96,
+            "h": 16,
+            "i": 3
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7004",
+          "type": "area",
+          "title": "SSH Failures Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp, '1 minute') as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"sshd_systemd\" WHERE message like '%Failed password%' OR message like '%Invalid user%' GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [
+                      {
+                        "type": null,
+                        "value": "1 minute"
+                      }
+                    ],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 16,
+            "w": 96,
+            "h": 16,
+            "i": 4
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7005",
+          "type": "area",
+          "title": "Firewall DENY Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#6e7074"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_firewall\" WHERE decision='DENY' GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_firewall",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 32,
+            "w": 96,
+            "h": 16,
+            "i": 5
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7006",
+          "type": "area",
+          "title": "YARA Matches Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#9a60b4"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp, '1 minute') as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_yara\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_yara",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [
+                      {
+                        "type": null,
+                        "value": "1 minute"
+                      }
+                    ],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 32,
+            "w": 96,
+            "h": 16,
+            "i": 6
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7007",
+          "type": "table",
+          "title": "Recent High-Signal Alerts",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#c23531"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, rule_name, event_user_name, event_process_name, event_host_name, action_taken, rule_mode FROM \"rb2_logs_alerts\" ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_alerts",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 48,
+            "w": 192,
+            "h": 20,
+            "i": 7
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7008",
+          "type": "metric",
+          "title": "RB2 Agents",
+          "description": "Unique host_id count from rb2_logs_process",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "0",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#3ba272"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT count(distinct(host_id)) as \"y_axis_1\" FROM \"rb2_logs_process\" WHERE host_id is not null",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_process",
+                "stream_type": "logs",
+                "x": [],
+                "y": [
+                  {
+                    "label": "Agents",
+                    "alias": "y_axis_1",
+                    "column": "host_id",
+                    "type": "custom",
+                    "color": "#3ba272",
+                    "functionName": "count-distinct",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 160,
+            "y": 0,
+            "w": 32,
+            "h": 16,
+            "i": 8
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "ssh",
+      "name": "Auth / SSH",
+      "panels": [
+        {
+          "id": "Panel_ID7101",
+          "type": "table",
+          "title": "Top SSH Failure Source IPs",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT regexp_replace(message,'^.* from ([0-9.]+) port .*$','$1') as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"sshd_systemd\" WHERE message like '%Failed password%' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "src_ip",
+                    "alias": "x_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": true
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 8
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7102",
+          "type": "table",
+          "title": "Top SSH Failure Users",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#9a60b4"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT regexp_replace(message,'^.* for (invalid user )?([^ ]+) from .*$','$2') as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"sshd_systemd\" WHERE message like '%Failed password%' OR message like '%Invalid user%' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "user",
+                    "alias": "x_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": true
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 9
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7103",
+          "type": "table",
+          "title": "Top SSH Accepted Users",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#3ba272"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT regexp_replace(message,'^.* for ([^ ]+) from .*$','$1') as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"sshd_systemd\" WHERE message like '%Accepted %' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "user",
+                    "alias": "x_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": true
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 20,
+            "w": 96,
+            "h": 20,
+            "i": 10
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7104",
+          "type": "table",
+          "title": "Top SSH Accepted Source IPs",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#61a0a8"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT regexp_replace(message,'^.* from ([0-9.]+) port .*$','$1') as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"sshd_systemd\" WHERE message like '%Accepted %' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "src_ip",
+                    "alias": "x_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": true
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "x_axis_1",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 20,
+            "w": 96,
+            "h": 20,
+            "i": 11
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7105",
+          "type": "table",
+          "title": "Recent SSH Accepted (Parsed)",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#3ba272"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, regexp_replace(message,'^Accepted ([^ ]+) for .*$', '$1') as method, regexp_replace(message,'^.* for ([^ ]+) from .*$', '$1') as user, regexp_replace(message,'^.* from ([0-9.]+) port .*$', '$1') as src_ip, regexp_replace(message,'^.* port ([0-9]+) .*$', '$1') as src_port FROM \"sshd_systemd\" WHERE message like '%Accepted %' ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 40,
+            "w": 192,
+            "h": 20,
+            "i": 12
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7106",
+          "type": "table",
+          "title": "Recent SSH Failures (Parsed)",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, case when message like '%Invalid user%' then 'invalid_user' else 'failed_password' end as kind, case   when message like '%Invalid user%' then regexp_replace(message,'^.*Invalid user ([^ ]+) from .*$', '$1')   else regexp_replace(message,'^.*Failed password for (invalid user )?([^ ]+) from .*$', '$2') end as user, regexp_replace(message,'^.* from ([0-9.]+) port .*$', '$1') as src_ip, regexp_replace(message,'^.* port ([0-9]+) .*$', '$1') as src_port FROM \"sshd_systemd\" WHERE message like '%Failed password%' OR message like '%Invalid user%' ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "sshd_systemd",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 60,
+            "w": 192,
+            "h": 20,
+            "i": 13
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "process",
+      "name": "Process",
+      "panels": [
+        {
+          "id": "Panel_ID7201",
+          "type": "area",
+          "title": "Process Events Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#61a0a8"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_process\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_process",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 14
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7202",
+          "type": "table",
+          "title": "Top Processes",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#d48265"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT process_name as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_process\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_process",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "process",
+                    "alias": "x_axis_1",
+                    "column": "process_name",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "process_name",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 15
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7203",
+          "type": "area",
+          "title": "Sudo Executions Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#ca8622"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_process\" WHERE process_name = 'sudo' GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_process",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 16,
+            "w": 96,
+            "h": 16,
+            "i": 16
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7204",
+          "type": "table",
+          "title": "Recent Suspicious Process Executions",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#d48265"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, host_name, user_name, process_name, process_executable, process_args, process_pname, process_pid, process_ppid FROM \"rb2_logs_process\" WHERE process_name in ('nc','netcat','ncat','socat','curl','wget','python','python3','perl','ruby','php','bash','sh','ssh','scp','sftp','sudo','su') ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_process",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 32,
+            "w": 192,
+            "h": 21,
+            "i": 17
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7205",
+          "type": "table",
+          "title": "Executions From /tmp or /dev/shm",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#c23531"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, host_name, user_name, process_name, process_executable, process_args FROM \"rb2_logs_process\" WHERE process_executable like '/tmp/%' OR process_executable like '/dev/shm/%' ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_process",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 53,
+            "w": 192,
+            "h": 20,
+            "i": 18
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "auditd",
+      "name": "Auditd",
+      "panels": [
+        {
+          "id": "Panel_ID7301",
+          "type": "area",
+          "title": "auditd execve failures (success=no)",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#c23531"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"auditd\" WHERE audit_syscall_syscall = '59' AND audit_syscall_success = 'no' GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "auditd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 19
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7302",
+          "type": "area",
+          "title": "Privileged Exec (euid=0, auid>=1000)",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#3ba272"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"auditd\" WHERE audit_syscall_syscall = '59' AND audit_syscall_euid = '0' AND audit_syscall_auid >= '1000' AND audit_syscall_auid != '4294967295' GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "auditd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 20
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7303",
+          "type": "table",
+          "title": "Top execve-failure comm",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT audit_syscall_comm as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"auditd\" WHERE audit_syscall_syscall = '59' AND audit_syscall_success = 'no' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "auditd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "comm",
+                    "alias": "x_axis_1",
+                    "column": "audit_syscall_comm",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "audit_syscall_comm",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 16,
+            "w": 96,
+            "h": 20,
+            "i": 21
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7304",
+          "type": "table",
+          "title": "Recent execve failures",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#6e7074"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, audit_syscall_comm, audit_syscall_exe, audit_syscall_auid, audit_syscall_uid, audit_syscall_euid, audit_syscall_success, audit_syscall_exit FROM \"auditd\" WHERE audit_syscall_syscall = '59' AND audit_syscall_success = 'no' ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "auditd",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 16,
+            "w": 96,
+            "h": 20,
+            "i": 22
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "firewall",
+      "name": "Firewall",
+      "panels": [
+        {
+          "id": "Panel_ID7401",
+          "type": "table",
+          "title": "Firewall Decision Counts",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#6e7074"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT decision as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_firewall\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_firewall",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "decision",
+                    "alias": "x_axis_1",
+                    "column": "decision",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "decision",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 23
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7402",
+          "type": "table",
+          "title": "Top DENY Source IPs",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT saddr as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_firewall\" WHERE decision='DENY' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_firewall",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "saddr",
+                    "alias": "x_axis_1",
+                    "column": "saddr",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "saddr",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 20,
+            "w": 96,
+            "h": 20,
+            "i": 24
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7403",
+          "type": "table",
+          "title": "Top DENY Dest IPs",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#61a0a8"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT daddr as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_firewall\" WHERE decision='DENY' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_firewall",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "daddr",
+                    "alias": "x_axis_1",
+                    "column": "daddr",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "daddr",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 16,
+            "w": 96,
+            "h": 20,
+            "i": 25
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7404",
+          "type": "table",
+          "title": "Top DENY Peer IPs",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#3ba272"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT peer_ip as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_firewall\" WHERE decision='DENY' GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_firewall",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "peer_ip",
+                    "alias": "x_axis_1",
+                    "column": "peer_ip",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "peer_ip",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 26
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "web",
+      "name": "Web",
+      "panels": [
+        {
+          "id": "Panel_ID7501",
+          "type": "area",
+          "title": "Nginx Requests Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#3ba272"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"nginx\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "nginx",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 27
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7502",
+          "type": "table",
+          "title": "Nginx Top Clients (IP)",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT client as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"nginx\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "nginx",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "client",
+                    "alias": "x_axis_1",
+                    "column": "client",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "client",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 28
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7503",
+          "type": "table",
+          "title": "Nginx Top Requests",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#2f4554"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT request as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"nginx\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "nginx",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "request",
+                    "alias": "x_axis_1",
+                    "column": "request",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "request",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 16,
+            "w": 96,
+            "h": 20,
+            "i": 29
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7504",
+          "type": "table",
+          "title": "Nginx Top Status",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#ca8622"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT status as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"nginx\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 15",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "nginx",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "status",
+                    "alias": "x_axis_1",
+                    "column": "status",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "status",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 20,
+            "w": 96,
+            "h": 16,
+            "i": 30
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7505",
+          "type": "area",
+          "title": "Apache Requests Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#61a0a8"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"apache\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "apache",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 36,
+            "w": 96,
+            "h": 16,
+            "i": 31
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7506",
+          "type": "table",
+          "title": "Apache Top Status",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#d48265"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT status as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"apache\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 15",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "apache",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "status",
+                    "alias": "x_axis_1",
+                    "column": "status",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "status",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 36,
+            "w": 96,
+            "h": 16,
+            "i": 32
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "modsec",
+      "name": "ModSecurity",
+      "panels": [
+        {
+          "id": "Panel_ID7601",
+          "type": "area",
+          "title": "ModSecurity Events Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#c23531"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"modsecurity\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "modsecurity",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 33
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7602",
+          "type": "table",
+          "title": "ModSecurity Top Client IPs",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT host_ip as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"modsecurity\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "modsecurity",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "host_ip",
+                    "alias": "x_axis_1",
+                    "column": "host_ip",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "host_ip",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 34
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7603",
+          "type": "table",
+          "title": "ModSecurity Top Paths",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#2f4554"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT path as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"modsecurity\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "modsecurity",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "path",
+                    "alias": "x_axis_1",
+                    "column": "path",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "path",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 16,
+            "w": 96,
+            "h": 20,
+            "i": 35
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7604",
+          "type": "table",
+          "title": "ModSecurity Status Codes",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#ca8622"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT status as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"modsecurity\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 15",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "modsecurity",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "status",
+                    "alias": "x_axis_1",
+                    "column": "status",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "status",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 20,
+            "w": 96,
+            "h": 16,
+            "i": 36
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "systemd",
+      "name": "Systemd",
+      "panels": [
+        {
+          "id": "Panel_ID7701",
+          "type": "area",
+          "title": "Systemd Events Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#6e7074"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_systemd\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 37
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7702",
+          "type": "table",
+          "title": "Systemd Top Identifiers",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#2f4554"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT syslog_identifier as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_systemd\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_systemd",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "syslog_identifier",
+                    "alias": "x_axis_1",
+                    "column": "syslog_identifier",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "syslog_identifier",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 38
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "scan",
+      "name": "Scan",
+      "panels": [
+        {
+          "id": "Panel_ID7801",
+          "type": "area",
+          "title": "Scan Events Over Time",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#5470c6"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_scan\" GROUP BY x_axis_1 ORDER BY x_axis_1 ASC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_scan",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "Timestamp",
+                    "alias": "x_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "_timestamp",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 16,
+            "i": 39
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7802",
+          "type": "table",
+          "title": "Recent Scan Events",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#61a0a8"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, host_name, module_name, prog_name, flag, description, message FROM \"rb2_logs_scan\" ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_scan",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 40
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    },
+    {
+      "tabId": "yara",
+      "name": "YARA",
+      "panels": [
+        {
+          "id": "Panel_ID7901",
+          "type": "table",
+          "title": "Top YARA Rules (Few Days)",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#2f4554"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT rule as \"x_axis_1\", count(_timestamp) as \"y_axis_1\" FROM \"rb2_logs_yara\" GROUP BY x_axis_1 ORDER BY y_axis_1 DESC LIMIT 25",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_yara",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "rule",
+                    "alias": "x_axis_1",
+                    "column": "rule",
+                    "type": "custom",
+                    "color": null,
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "count",
+                    "alias": "y_axis_1",
+                    "column": "rule",
+                    "type": "custom",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "sortBy": "DESC",
+                    "args": [],
+                    "isDerived": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 41
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        },
+        {
+          "id": "Panel_ID7902",
+          "type": "table",
+          "title": "Recent YARA Events",
+          "description": "",
+          "config": {
+            "show_legends": false,
+            "legends_position": null,
+            "unit": "numbers",
+            "decimals": 0,
+            "line_thickness": 1.5,
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0
+            },
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1,
+              "lat": 0,
+              "lng": 0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1,
+                "max": 100
+              },
+              "size_fixed": 2
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": true,
+            "table_transpose": false,
+            "table_dynamic_columns": true,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#9a60b4"
+              ],
+              "seriesBy": "last"
+            }
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, host_name, rule, path, pid, action_taken FROM \"rb2_logs_yara\" ORDER BY _timestamp DESC LIMIT 200",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "rb2_logs_yara",
+                "stream_type": "logs",
+                "x": [],
+                "y": [],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1,
+                "limit": 0,
+                "min": 0,
+                "max": 100,
+                "time_shift": []
+              }
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 20,
+            "i": 42
+          },
+          "htmlContent": "",
+          "markdownContent": ""
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "list": [],
+    "showDynamicFilters": true
+  },
+  "defaultDatetimeDuration": {
+    "type": "relative",
+    "relativeTimePeriod": "3d"
+  }
+}

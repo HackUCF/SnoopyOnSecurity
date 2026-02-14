@@ -1,0 +1,6 @@
+name: sigma_systemctl_mask_power_settings
+mode: alert
+eval: |
+  (
+    (e.process_name == "systemctl" && e.process_args.contains(" mask")) && ((e.process_args.contains("suspend.target") || e.process_args.contains("hibernate.target") || e.process_args.contains("hybrid-sleep.target")))
+  )

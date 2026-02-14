@@ -1,3 +1,15 @@
 name: exec_from_tmp
+mode: alert
 eval: e.process_executable.starts_with("/tmp/") &&
       e.event_category == "process"
+tests:
+  - cleartext: "/tmp/evil.bin (exec from /tmp)"
+    process_name: malware
+    process_executable: "/tmp/evil.bin"
+    event_category: process
+    should_match: true
+  - cleartext: "/usr/bin/ls (normal path)"
+    process_name: ls
+    process_executable: "/usr/bin/ls"
+    event_category: process
+    should_match: false

@@ -1,0 +1,6 @@
+name: sigma_susp_network_utilities_execution
+mode: alert
+eval: |
+  (
+    ((((e.process_name == "nc" || e.process_name == "ncat" || e.process_name == "netcat" || e.process_name == "socat")) && (!((e.process_args.contains(" --listen ") || e.process_args.contains(" -l ")))))) || ((e.process_name == "autorecon" || e.process_name == "hping" || e.process_name == "hping2" || e.process_name == "hping3" || e.process_name == "naabu" || e.process_name == "nmap" || e.process_name == "nping" || e.process_name == "telnet" || e.process_name == "zenmap"))
+  )

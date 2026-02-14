@@ -1,0 +1,6 @@
+name: sigma_php_reverse_shell
+mode: alert
+eval: |
+  (
+    e.process_executable.contains("/php") && (e.process_args.contains(" -r ") && e.process_args.contains("fsockopen")) && (e.process_args.contains("ash") || e.process_args.contains("bash") || e.process_args.contains("bsh") || e.process_args.contains("csh") || e.process_args.contains("ksh") || e.process_args.contains("pdksh") || e.process_args.contains("sh") || e.process_args.contains("tcsh") || e.process_args.contains("zsh"))
+  )

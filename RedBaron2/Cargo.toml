@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [ 
+    "asciicastlib",
     "flying-ace-engine",
     "rb2-userspace",
 ]
@@ -12,3 +13,7 @@ edition = "2024"
 
 [profile.release]
 strip = true
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+debug = 0

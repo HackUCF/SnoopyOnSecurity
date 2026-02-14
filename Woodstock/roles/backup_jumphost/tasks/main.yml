@@ -1,0 +1,54 @@
+---
+- name: Check which backup source directories exist on remote host
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ backup_jumphost_source_dirs }}"
+  register: backup_jumphost_source_stats
+
+- name: Build list of existing backup source directories
+  ansible.builtin.set_fact:
+    backup_jumphost_existing_dirs: >-
+      {{ backup_jumphost_source_stats.results
+         | selectattr('stat.exists', 'equalto', true)
+         | map(attribute='item')
+         | list }}
+
+- name: Stop if none of the backup source directories exist
+  ansible.builtin.fail:
+    msg: "No backup source directories exist: {{ backup_jumphost_source_dirs | join(', ') }}"
+  when: backup_jumphost_existing_dirs | length == 0
+
+- name: Ensure remote backup staging directory exists
+  ansible.builtin.file:
+    path: "{{ backup_jumphost_remote_backup_dir }}"
+    state: directory
+    mode: "0700"
+
+- name: Create compressed backup archive on remote host
+  community.general.archive:
+    path: "{{ backup_jumphost_existing_dirs }}"
+    dest: "{{ backup_jumphost_remote_backup_path }}"
+    format: gz
+
+- name: Ensure local backup destination exists on controller
+  ansible.builtin.file:
+    path: "{{ backup_jumphost_local_backup_dir }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  become: false
+
+- name: Fetch backup archive from remote host to controller
+  ansible.builtin.fetch:
+    src: "{{ backup_jumphost_remote_backup_path }}"
+    dest: "{{ backup_jumphost_local_backup_path }}"
+    flat: true
+
+- name: Remove remote staged backup archive
+  ansible.builtin.file:
+    path: "{{ backup_jumphost_remote_backup_path }}"
+    state: absent
+
+- name: Show local backup archive path
+  ansible.builtin.debug:
+    msg: "Backup created: {{ backup_jumphost_local_backup_path }}"

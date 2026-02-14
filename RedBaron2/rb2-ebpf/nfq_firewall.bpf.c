@@ -1,4 +1,14 @@
 #include "vmlinux.h"
+
+#if defined(__TARGET_ARCH_arm64)
+struct user_pt_regs {
+	__u64		regs[31];
+	__u64		sp;
+	__u64		pc;
+	__u64		pstate;
+};
+#endif
+
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
@@ -14,7 +24,7 @@ struct ipv4_key_t {
 } __attribute__((packed));
 
 struct owner {
-  u64 pid;
+  int pid;
   char comm[TASK_COMM_LEN];
 } __attribute__((packed));
 
@@ -111,7 +121,7 @@ int kprobe__udp_sendmsg(struct pt_regs *ctx) {
   udp_key.daddr = __builtin_bswap32(udp_key.daddr);
 
   struct owner *lookedupValue = bpf_map_lookup_elem(&udpMap, &udp_key);
-  u64 pid = bpf_get_current_pid_tgid() >> 32;
+  int pid = bpf_get_current_pid_tgid() >> 32;
   if (!lookedupValue || lookedupValue->pid != pid) {
     struct owner udp_value = {};
     udp_value.pid = pid;
@@ -176,7 +186,7 @@ int kretprobe__inet_dgram_connect(struct pt_regs *ctx) {
   if (proto == IPPROTO_UDP) {
     bpf_map_update_elem(&udpMap, &udp_key, &udp_value, BPF_ANY);
   } else {
-    bpf_printk("Unknown proto found %d (pid=%llu)\n", proto, udp_value.pid);
+    bpf_printk("Unknown proto found %d (pid=%d)\n", proto, udp_value.pid);
   }
 
   return 0;
@@ -211,7 +221,7 @@ int kprobe__iptunnel_xmit(struct pt_regs *ctx) {
   udp_key.daddr = __builtin_bswap32(dst);
 
   struct owner *lookedupValue = bpf_map_lookup_elem(&udpMap, &udp_key);
-  u64 pid = bpf_get_current_pid_tgid() >> 32;
+  int pid = bpf_get_current_pid_tgid() >> 32;
   if (!lookedupValue || lookedupValue->pid != pid) {
     udp_value.pid = pid;
     bpf_get_current_comm(&udp_value.comm, sizeof(udp_value.comm));

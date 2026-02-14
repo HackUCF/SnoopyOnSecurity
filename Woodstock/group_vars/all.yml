@@ -1,0 +1,35 @@
+---
+# Common user configuration
+safe_user_name: safe
+
+# SSH key cleanup defaults
+ssh_key_cleanup_min_uid: 1000
+ssh_key_cleanup_skip_shells:
+  - /usr/sbin/nologin
+  - /sbin/nologin
+  - /bin/false
+ssh_key_cleanup_exclude_users: []
+
+red_baron_location: RedBaron2/release/rb2
+
+# rb2 TTY — path to authorized_keys on remote hosts for session recording
+
+host_safe_user_pubkey_path: "{{ lookup('ansible.builtin.env', 'HOME') + '/.ssh/ccdc_safe.pub' }}"
+
+log_cleanup_enabled: false
+log_cleanup_max_age_days: 2
+
+# No trailing /
+openobserve_url: "http://127.0.0.1"
+openobserve_user: "woodstock@example.com"
+openobserve_password: "I_Love_Birds!"
+
+minio_endpoint: "http://127.0.0.1/"
+minio_access_key: "6767676767"
+minio_secret_key: "676767676767"
+minio_bucket: "rb2-tty"
+minio_region: "us-east-1"
+minio_path_style: true
+
+red_baron_move_binary_s3: true
+red_baron_forward_to_s3: true

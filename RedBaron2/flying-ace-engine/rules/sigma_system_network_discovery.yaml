@@ -1,0 +1,6 @@
+name: sigma_system_network_discovery
+mode: alert
+eval: |
+  (
+    ((e.process_name == "firewall-cmd" || e.process_name == "ufw" || e.process_name == "iptables" || e.process_name == "netstat" || e.process_name == "ss" || e.process_name == "ip" || e.process_name == "ifconfig" || e.process_name == "systemd-resolve" || e.process_name == "route")) || (e.process_args.contains("/etc/resolv.conf"))
+  )

@@ -1,0 +1,13 @@
+---
+- name: Uninstall AWS SSM Agent
+  hosts: "linux:discovered_linux"
+  gather_facts: true
+  any_errors_fatal: false
+  strategy: free
+  become: true
+  pre_tasks:
+    - name: Skip non-Linux hosts (e.g. BSD)
+      ansible.builtin.meta: end_host
+      when: ansible_system != 'Linux'
+  roles:
+    - ssm_uninstall

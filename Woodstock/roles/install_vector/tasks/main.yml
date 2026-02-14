@@ -1,0 +1,145 @@
+---
+- name: Resolve SSH user home directory
+  ansible.builtin.command: getent passwd {{ ansible_user }}
+  register: install_vector_user_getent
+  changed_when: false
+
+- name: Set Vector installer home directory
+  ansible.builtin.set_fact:
+    install_vector_user_home: "{{ install_vector_user_getent.stdout.split(':')[5] | default('/home/' ~ ansible_user, true) }}"
+
+- name: Check for vector in /usr/bin
+  ansible.builtin.stat:
+    path: /usr/bin/vector
+  register: install_vector_usr_bin
+
+- name: Check for vector in /usr/local/bin
+  ansible.builtin.stat:
+    path: /usr/local/bin/vector
+  register: install_vector_usr_local_bin
+
+- name: Download Vector install script
+  ansible.builtin.get_url:
+    url: https://sh.vector.dev
+    dest: "{{ install_vector_install_script_path }}"
+    mode: "0755"
+  when:
+    - not install_vector_usr_bin.stat.exists
+    - not install_vector_usr_local_bin.stat.exists
+
+- name: Run Vector installer (non-interactive)
+  ansible.builtin.command: bash {{ install_vector_install_script_path }} -y
+  become: false
+  environment:
+    HOME: "{{ install_vector_user_home }}"
+  when:
+    - not install_vector_usr_bin.stat.exists
+    - not install_vector_usr_local_bin.stat.exists
+  changed_when: true
+
+- name: Resolve vector path via PATH
+  ansible.builtin.command: /bin/sh -c "command -v vector"
+  register: install_vector_cmd
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+- name: Check fallback vector paths
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /usr/bin/vector
+    - /usr/local/bin/vector
+    - /opt/vector/bin/vector
+    - "{{ install_vector_user_home }}/.vector/bin/vector"
+    - /root/.vector/bin/vector
+  register: install_vector_path_stats
+  when: install_vector_cmd.rc != 0
+
+- name: Pick installed vector path
+  ansible.builtin.set_fact:
+    install_vector_bin: >-
+      {{ install_vector_cmd.stdout if install_vector_cmd.rc == 0 else
+      (install_vector_path_stats.results
+      | selectattr('stat.exists', 'equalto', true)
+      | map(attribute='item')
+      | list
+      | first
+      | default('')) }}
+
+- name: Fail if vector binary is still missing
+  ansible.builtin.fail:
+    msg: "Vector installer completed but no vector binary was found in standard paths."
+  when: install_vector_bin | length == 0
+
+- name: copy vector binary to /usr/local/bin
+  ansible.builtin.copy:
+    src: "{{ install_vector_bin }}"
+    dest: /usr/local/bin/vector
+    remote_src: true
+    mode: "0755"
+    owner: root
+    group: root
+  when:
+    - install_vector_bin == (install_vector_user_home ~ "/.vector/bin/vector") or install_vector_bin == "/root/.vector/bin/vector"
+
+- name: Ensure install_vector_bin points to global path after symlink
+  ansible.builtin.set_fact:
+    install_vector_bin: /usr/local/bin/vector
+  when: install_vector_bin == (install_vector_user_home ~ "/.vector/bin/vector") or install_vector_bin == "/root/.vector/bin/vector"
+
+- name: restore selinux context
+  ansible.builtin.shell: restorecon -Rv /usr/local/bin/vector
+  failed_when: false
+  when:
+    - install_vector_bin == "/usr/local/bin/vector"
+    - ansible_selinux.status is defined and ansible_selinux.status == "enabled"
+
+- name: Verify vector installation
+  ansible.builtin.command: "{{ install_vector_bin }} --version"
+  changed_when: false
+
+- name: create vector config directory
+  ansible.builtin.file:
+    path: /etc/vector
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+- name: create vector config directory
+  ansible.builtin.file:
+    path: /var/lib/vector/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+- name: copy vector config
+  ansible.builtin.template:
+    src: vector.yml.j2
+    dest: /etc/vector/vector.yml
+    owner: root
+    group: root
+    mode: 0644
+  when: install_vector_bin == '/usr/local/bin/vector'
+
+- name: create systemd unit
+  ansible.builtin.template:
+    src: vector.service.j2
+    dest: /etc/systemd/system/vector.service
+    owner: root
+    group: root
+    mode: 0644
+  when: install_vector_bin == '/usr/local/bin/vector'
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: install_vector_bin == '/usr/local/bin/vector'
+
+- name: Start vector service
+  ansible.builtin.systemd:
+    name: vector
+    state: restarted
+    enabled: true
+  when: install_vector_bin == '/usr/local/bin/vector'

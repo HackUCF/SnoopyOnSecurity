@@ -1,0 +1,3 @@
+---
+# TTY configuration — override in group_vars or host_vars
+redbaron_install_tty_authorized_keys: "~/.ssh/authorized_keys"

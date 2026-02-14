@@ -1,0 +1,6 @@
+name: sigma_crontab_removal
+mode: alert
+eval: |
+  (
+    re_match(e.process_name, "crontab$") && e.process_args.contains(" -r")
+  )

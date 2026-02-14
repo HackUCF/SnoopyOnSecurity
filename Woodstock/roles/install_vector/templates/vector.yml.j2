@@ -1,0 +1,357 @@
+data_dir: /var/lib/vector/
+
+sources:
+  nginx:
+    type: "file"
+    include:
+      - "/var/log/nginx/**/*.log"
+      - "/var/log/nginx/*.log"
+  mod_security:
+    type: "file"
+    include:
+      - "/var/log/modsec_audit.log"
+  apache_logs:
+    type: "file"
+    include:
+      - "/var/log/apache2/**/*.log"
+      - "/var/log/apache2/*.log"
+      - "/var/log/httpd/**/*_log"
+      - "/var/log/httpd/*_log"
+      - "/var/log/httpd/**/*.log"
+      - "/var/log/httpd/*.log"
+  auditd:
+    type: file
+    include:
+      - /var/log/audit/audit.log
+    read_from: end
+    max_line_bytes: 65536
+  rb2_journald:
+    type: journald
+    include_units:
+      - rb2
+  sshd_journald:
+    type: journald
+    include_units:
+      - sshd
+      - ssh
+  host_metrics:
+    type: host_metrics
+    scrape_interval_secs: 15
+    namespace: host
+    collectors:
+      - cpu
+      - memory
+      - load
+      - disk
+      - filesystem
+      - network
+      - host
+    network:
+      devices:
+        excludes:
+          - "lo"
+          - "veth*"
+          - "cali*"
+          - "docker*"
+          - "flannel*"
+          - "cni*"
+          - "kube-ipvs0"
+    filesystem:
+      mountpoints:
+        excludes:
+          - "/proc*"
+          - "/sys*"
+          - "/run*"
+          - "/var/lib/docker/*"
+          - "/var/lib/containerd/*"
+    disk:
+      devices:
+        excludes:
+          - "loop*"
+          - "ram*"
+          - "dm-*"
+
+transforms:
+  nginx_parser:
+    inputs:
+      - "nginx"
+    type: "remap"
+    source: |
+      hostname = .host
+      src_file = .file
+      . = parse_nginx_log!(.message, format: "combined")
+      .source_host = hostname
+      .source_file = src_file
+  parse_mod_security:
+    type: remap
+    inputs:
+      - mod_security
+    source: |
+      .message = parse_json!(string!(.message))
+  apache_parser:
+    inputs:
+      - "apache_logs"
+    type: "remap"
+    source: |
+      hostname = .host
+      src_file = .file
+      . = parse_apache_log!(.message, format: "combined")
+      .source_host = hostname
+      .source_file = src_file
+  parse_auditd:
+    type: remap
+    inputs: [auditd]
+    source: |
+      raw = to_string!(.message)
+      raw = replace(raw, "\r", "")
+      raw = replace(raw, "\n", "")
+      raw = replace(raw, "\t", " ")
+
+      m = parse_regex!(
+        raw,
+        r'^type=(?P<record_type>[A-Z0-9_]+) msg=audit[(](?P<sec>[0-9]+)[.](?P<usec>[0-9]+):(?P<serial>[0-9]+)[)][:] (?P<body>.*)$'
+      )
+
+      record_type = m.record_type
+      sec = to_int!(m.sec)
+      usec = to_int!(slice!(m.usec, 0, 6))
+      serial = to_int!(m.serial)
+      body = m.body
+
+      field_parts = split(body, "ARCH=")
+      field_blob = field_parts[0]
+      fields = parse_key_value(field_blob, field_delimiter: " ", key_value_delimiter: "=") ?? {}
+
+      .dataset = "auditd"
+      .event_type = "auditd"
+      .audit = {}
+      .audit.record_type = record_type
+      .audit.serial = serial
+      ._timestamp = (sec * 1000000) + usec
+
+      .audit.fields = fields
+      .audit.raw_fields = body
+      .message = raw
+
+      if record_type == "SYSCALL"   { .audit.syscall = fields }
+      if record_type == "EXECVE"    { .audit.execve = fields }
+      if record_type == "CWD"       { .audit.cwd = fields }
+      if record_type == "PATH"      { .audit.path = fields }
+      if record_type == "PROCTITLE" { .audit.proctitle = fields }
+
+  group_auditd:
+    type: reduce
+    inputs: [parse_auditd]
+    group_by: ["audit.serial"]
+    flush_period_ms: 400
+    expire_after_ms: 1500
+    merge_strategies:
+      _timestamp: retain
+      dataset: retain
+      event_type: retain
+      message: discard
+
+      audit.record_type: array
+      audit.fields: array
+      audit.raw_fields: array
+      audit.path: array
+
+      audit.syscall: retain
+      audit.execve: retain
+      audit.cwd: retain
+      audit.proctitle: retain
+
+  finalize_auditd:
+    type: remap
+    inputs: [group_auditd]
+    source: |
+      if exists(.audit.record_type) {
+        .audit.record_types = .audit.record_type
+        del(.audit.record_type)
+      }
+
+      if exists(.audit.fields) {
+        .audit.records = .audit.fields
+        del(.audit.fields)
+      }
+
+      if exists(.audit.execve) {
+        args = compact([
+          .audit.execve.a0, .audit.execve.a1, .audit.execve.a2, .audit.execve.a3,
+          .audit.execve.a4, .audit.execve.a5, .audit.execve.a6, .audit.execve.a7,
+          .audit.execve.a8, .audit.execve.a9, .audit.execve.a10, .audit.execve.a11,
+          .audit.execve.a12, .audit.execve.a13, .audit.execve.a14, .audit.execve.a15
+        ])
+
+        if length(args) > 0 {
+          if !exists(.process) { .process = {} }
+          .process.command = join!(args, " ")
+          .message = .process.command
+        }
+      }
+
+      if exists(.audit.syscall) {
+        if !exists(.process) { .process = {} }
+        .process.pid = to_int(.audit.syscall.pid) ?? null
+        .process.ppid = to_int(.audit.syscall.ppid) ?? null
+        .process.name = .audit.syscall.comm
+        .process.executable = .audit.syscall.exe
+
+        .user = {}
+        .user.auid = .audit.syscall.auid
+        .user.uid = to_int(.audit.syscall.uid) ?? null
+        .user.gid = to_int(.audit.syscall.gid) ?? null
+        .user.euid = to_int(.audit.syscall.euid) ?? null
+
+        success_raw = downcase(to_string(.audit.syscall.success) ?? "")
+        .audit.success = success_raw == "yes"
+        .audit.syscall_num = to_int(.audit.syscall.syscall) ?? null
+        .audit.session = to_int(.audit.syscall.ses) ?? null
+        .audit.key = .audit.syscall.key
+        .audit.tty = .audit.syscall.tty
+      }
+
+      if exists(.audit.cwd.cwd) {
+        if !exists(.file) { .file = {} }
+        .file.cwd = .audit.cwd.cwd
+      }
+
+      if !exists(.message) || is_empty(to_string(.message) ?? "") {
+        .message = "auditd event"
+      }
+
+{% if install_vector_auditd_exclude_commands | default([]) | length > 0 %}
+  filter_auditd_noise:
+    type: remap
+    inputs: [finalize_auditd]
+    drop_on_abort: true
+    source: |
+      cmd = to_string(.message) ?? ""
+{% for pattern in install_vector_auditd_exclude_commands %}
+      if contains(cmd, {{ pattern | to_json }}) { abort }
+{% endfor %}
+{% endif %}
+
+sinks:
+  openobserve:
+    type: http
+{% if install_vector_auditd_exclude_commands | default([]) | length > 0 %}
+    inputs: [filter_auditd_noise]
+{% else %}
+    inputs: [finalize_auditd]
+{% endif %}
+    uri: "{{ openobserve_url }}/api/{{ install_vector_openobserve_org }}/{{ install_vector_openobserve_stream }}/_json"
+    method: post
+    auth:
+      strategy: basic
+      user: "{{ openobserve_user }}"
+      password: "{{ openobserve_password }}"
+    request:
+      headers:
+        Content-Type: application/json
+    encoding:
+      codec: json
+    compression: gzip
+    batch:
+      max_events: 200
+      timeout_secs: 1
+  openobserve2:
+    type: http
+    inputs: [apache_parser]
+    uri: "{{ openobserve_url }}/api/{{ install_vector_openobserve_org }}/apache/_json"
+    method: post
+    auth:
+      strategy: basic
+      user: "{{ openobserve_user }}"
+      password: "{{ openobserve_password }}"
+    request:
+      headers:
+        Content-Type: application/json
+    encoding:
+      codec: json
+    compression: gzip
+    batch:
+      max_events: 200
+      timeout_secs: 1
+  openobserve3:
+    type: http
+    inputs: [parse_mod_security]
+    uri: "{{ openobserve_url }}/api/{{ install_vector_openobserve_org }}/modsecurity/_json"
+    method: post
+    auth:
+      strategy: basic
+      user: "{{ openobserve_user }}"
+      password: "{{ openobserve_password }}"
+    request:
+      headers:
+        Content-Type: application/json
+    encoding:
+      codec: json
+    compression: gzip
+    batch:
+      max_events: 200
+      timeout_secs: 1
+  openobserve4:
+    type: http
+    inputs: [nginx_parser]
+    uri: "{{ openobserve_url }}/api/{{ install_vector_openobserve_org }}/nginx/_json"
+    method: post
+    auth:
+      strategy: basic
+      user: "{{ openobserve_user }}"
+      password: "{{ openobserve_password }}"
+    request:
+      headers:
+        Content-Type: application/json
+    encoding:
+      codec: json
+    compression: gzip
+    batch:
+      max_events: 200
+      timeout_secs: 1
+  openobserve_sshd_systemd:
+    type: http
+    inputs: [sshd_journald]
+    uri: "{{ openobserve_url }}/api/{{ install_vector_openobserve_org }}/sshd_systemd/_json"
+    method: post
+    auth:
+      strategy: basic
+      user: "{{ openobserve_user }}"
+      password: "{{ openobserve_password }}"
+    request:
+      headers:
+        Content-Type: application/json
+    encoding:
+      codec: json
+    compression: gzip
+    batch:
+      max_events: 200
+      timeout_secs: 1
+  openobserve_rb2_systemd:
+    type: http
+    inputs: [rb2_journald]
+    uri: "{{ openobserve_url }}/api/{{ install_vector_openobserve_org }}/rb2_logs_systemd/_json"
+    method: post
+    auth:
+      strategy: basic
+      user: "{{ openobserve_user }}"
+      password: "{{ openobserve_password }}"
+    request:
+      headers:
+        Content-Type: application/json
+    encoding:
+      codec: json
+    compression: gzip
+    batch:
+      max_events: 200
+      timeout_secs: 1
+  openobserve_metrics:
+    type: prometheus_remote_write
+    inputs:
+      - host_metrics
+    endpoint: "{{ openobserve_url }}/api/{{ install_vector_openobserve_org }}/prometheus/api/v1/write"
+    compression: snappy
+    auth:
+      strategy: basic
+      user: "{{ openobserve_user }}"
+      password: "{{ openobserve_password }}"

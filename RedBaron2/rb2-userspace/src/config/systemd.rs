@@ -44,12 +44,13 @@ Description=Red Baron 2
 After=network.target
 
 [Service]
-Type=simple
+Type=notify
 ExecStart="{exec}"
 Restart=on-failure
 RestartSec=2
 Environment="RUST_LOG={rust_log}"
 Environment="RB2_CONFIG={rb2_config}"
+WatchdogSec=30s
 
 [Install]
 WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+name: sigma_esxcli_syslog_config_change
+mode: alert
+eval: |
+  (
+    e.process_name == "esxcli" && (e.process_args.contains("system") && e.process_args.contains("syslog") && e.process_args.contains("config")) && e.process_args.contains(" set")
+  )

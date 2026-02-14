@@ -1,0 +1,18 @@
+---
+cron_cleanup_debian_packages:
+  - cron
+  - at
+  - anacron
+
+cron_cleanup_rhel_packages:
+  - cronie
+  - cronie-noanacron
+  - at
+  - cronie-anacron
+  - crontabs
+
+cron_cleanup_processes:
+  - cron
+  - crond
+  - at
+  - anacron

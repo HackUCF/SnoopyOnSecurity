@@ -1,0 +1,6 @@
+name: sigma_python_http_server_execution
+mode: alert
+eval: |
+  (
+    (((e.process_name == "python" || e.process_name == "python2" || e.process_name == "python3") || (e.process_executable.contains("/python2.") || e.process_executable.contains("/python3.")))) && ((e.process_args.contains("http.server") || e.process_args.contains("SimpleHTTPServer")))
+  )

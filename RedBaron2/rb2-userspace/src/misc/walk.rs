@@ -1,5 +1,6 @@
 use super::log::log_detection;
 use log::debug;
+use serde_json::json;
 use std::collections::HashSet;
 use std::ffi::OsStr;
 use std::io;
@@ -141,10 +142,11 @@ pub async fn pid_scan() -> io::Result<()> {
                 Err(_) => "<unknown>".to_string(),
             };
 
-            log_detection(&format!(
-                "These pids may have been hidden: pid={} comm={} exe={}",
-                pid, comm, exe
-            ))
+            log_detection(
+                "hidden_pid",
+                &format!("pid={} comm={} exe={}", pid, comm, exe),
+                json!({ "pid": pid, "comm": comm, "exe": exe }),
+            )
             .await;
         }
     } else {
@@ -250,11 +252,21 @@ pub async fn diff_cgroup_vs_proc() -> io::Result<()> {
     let only_in_proc: Vec<u32> = stable_pr.difference(&stable_cg).copied().collect();
 
     for pid in &only_in_cgroup {
-        log_detection(&format!("PID only in cgroup tree {}", pid)).await;
+        log_detection(
+            "cgroup_only_pid",
+            &format!("PID {} only in cgroup tree", pid),
+            json!({ "pid": pid }),
+        )
+        .await;
     }
 
     for pid in &only_in_proc {
-        log_detection(&format!("PID only in ps tree {}", pid)).await;
+        log_detection(
+            "proc_only_pid",
+            &format!("PID {} only in ps tree", pid),
+            json!({ "pid": pid }),
+        )
+        .await;
     }
 
     if only_in_cgroup.is_empty() && only_in_proc.is_empty() {

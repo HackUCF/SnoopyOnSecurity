@@ -1,0 +1,6 @@
+name: sigma_esxcli_vm_discovery
+mode: alert
+eval: |
+  (
+    e.process_name == "esxcli" && e.process_args.contains("vm process") && e.process_args.ends_with(" list")
+  )

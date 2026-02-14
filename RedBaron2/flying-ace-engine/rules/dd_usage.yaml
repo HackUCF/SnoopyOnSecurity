@@ -1,0 +1,24 @@
+name: dd_usage
+mode: alert
+eval: |
+  (
+    e.process_name == "dd" &&
+    re_match(e.process_args, "(if=|of=)")
+  )
+tests:
+  - cleartext: "dd if=/dev/sda of=/tmp/disk.img bs=4M"
+    process_name: dd
+    process_args: "dd if=/dev/sda of=/tmp/disk.img bs=4M"
+    should_match: true
+  - cleartext: "dd if=/dev/zero of=/dev/sda bs=1M"
+    process_name: dd
+    process_args: "dd if=/dev/zero of=/dev/sda bs=1M"
+    should_match: true
+  - cleartext: "dd if=/dev/urandom of=/tmp/random.bin bs=1024 count=100"
+    process_name: dd
+    process_args: "dd if=/dev/urandom of=/tmp/random.bin bs=1024 count=100"
+    should_match: true
+  - cleartext: "ls -la (not dd)"
+    process_name: ls
+    process_args: "ls -la"
+    should_match: false

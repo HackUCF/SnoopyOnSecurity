@@ -1,0 +1,19 @@
+name: wall_usage
+mode: alert
+eval: |
+  (
+    e.process_name == "wall"
+  )
+tests:
+  - cleartext: "wall 'System going down for maintenance'"
+    process_name: wall
+    process_args: "wall System going down for maintenance"
+    should_match: true
+  - cleartext: "echo hello | wall"
+    process_name: wall
+    process_args: "wall"
+    should_match: true
+  - cleartext: "echo hello"
+    process_name: echo
+    process_args: "echo hello"
+    should_match: false

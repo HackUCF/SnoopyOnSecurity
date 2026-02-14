@@ -1,0 +1,6 @@
+name: sigma_cp_passwd_or_shadow_tmp
+mode: alert
+eval: |
+  (
+    (e.process_name == "cp") && (e.process_args.contains("/tmp/")) && ((e.process_args.contains("passwd") || e.process_args.contains("shadow")))
+  )

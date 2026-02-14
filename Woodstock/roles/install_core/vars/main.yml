@@ -1,0 +1,25 @@
+---
+install_core_debian_packages:
+  - jq
+  - lsof
+  - tmux
+  - binutils
+  - psmisc
+  - auditd
+  - debsums
+  - acl
+  - bpfcc-tools
+  - bpftrace
+  - restic
+install_core_rhel_packages:
+  - python3-dnf
+  - jq
+  - lsof
+  - tmux
+  - binutils
+  - psmisc
+  - audit
+  - acl
+  - bcc-tools
+  - bpftrace
+  - restic

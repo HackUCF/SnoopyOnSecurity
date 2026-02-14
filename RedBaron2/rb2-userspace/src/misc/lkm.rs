@@ -1,5 +1,6 @@
 use super::log::log_detection;
 use log::debug;
+use serde_json::json;
 use std::collections::HashSet;
 use std::io;
 use tokio::fs;
@@ -20,8 +21,6 @@ pub async fn check_taint() -> io::Result<()> {
         debug!("Kernel not Tainted");
         return Ok(());
     }
-
-    let mut out = String::new();
 
     // descriptions from: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/tools/debugging/kernel-chktaint
     let flags = [
@@ -47,27 +46,45 @@ pub async fn check_taint() -> io::Result<()> {
         ('J', " * fwctl's mutating debug interface was used"),
     ];
 
+    let mut out = String::new();
+    let mut detections = Vec::new();
+
     // bit 0 is special
     if (taint & 1) == 0 {
         out.push('G');
     } else {
         out.push('P');
-        log_detection(&format!("LKM {}", flags[0].1)).await;
+        detections.push(json!({
+            "bit": 0,
+            "flag": "P",
+            "description": flags[0].1.trim(),
+        }));
     }
 
     for (bit, (ch, msg)) in flags.iter().enumerate().skip(1) {
         if ((taint >> bit) & 1) == 1 {
             out.push(*ch);
-            log_detection(&format!("LKM {}", msg)).await;
+            detections.push(json!({
+                "bit": bit,
+                "flag": ch.to_string(),
+                "description": msg.trim(),
+            }));
         } else {
             out.push(' ');
         }
     }
-    log_detection(&format!(
-        "THE KERNEL IS TAINTED: Full taint string: {}",
-        out
-    ))
+
+    log_detection(
+        "kernel_taint",
+        &format!("Kernel tainted. Full taint string: {}", out),
+        json!({
+            "taint": taint,
+            "taint_string": out.trim(),
+            "flags": detections,
+        }),
+    )
     .await;
+
     Ok(())
 }
 
@@ -98,10 +115,11 @@ pub async fn check_sys_module() -> io::Result<()> {
         // check for refcnt file
         let refcnt = path.join("refcnt");
         if fs::metadata(&refcnt).await.is_ok() && !loaded.contains(name) {
-            log_detection(&format!(
-                "Potentially hidden rootkit found in /sys/module {}",
-                name
-            ))
+            log_detection(
+                "hidden_rootkit",
+                &format!("Potentially hidden rootkit found in /sys/module {}", name),
+                json!({ "module_name": name }),
+            )
             .await;
         }
     }

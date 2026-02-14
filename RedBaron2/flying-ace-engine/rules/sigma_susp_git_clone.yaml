@@ -1,0 +1,6 @@
+name: sigma_susp_git_clone
+mode: alert
+eval: |
+  (
+    (e.process_name == "git" && e.process_args.contains(" clone ")) && ((e.process_args.contains("exploit") || e.process_args.contains("Vulns") || e.process_args.contains("vulnerability") || e.process_args.contains("RCE") || e.process_args.contains("RemoteCodeExecution") || e.process_args.contains("Invoke-") || e.process_args.contains("CVE-") || e.process_args.contains("poc-") || e.process_args.contains("ProofOfConcept") || e.process_args.contains("proxyshell") || e.process_args.contains("log4shell") || e.process_args.contains("eternalblue") /* truncated: 2 more value(s) omitted to stay within Rhai complexity limit */))
+  )

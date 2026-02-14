@@ -1,0 +1,6 @@
+name: sigma_env_shell_invocation
+mode: alert
+eval: |
+  (
+    e.process_name == "env" && (e.process_args.ends_with("/bin/bash") || e.process_args.ends_with("/bin/dash") || e.process_args.ends_with("/bin/fish") || e.process_args.ends_with("/bin/sh") || e.process_args.ends_with("/bin/zsh"))
+  )

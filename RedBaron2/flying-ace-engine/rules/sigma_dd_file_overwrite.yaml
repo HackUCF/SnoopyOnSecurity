@@ -1,0 +1,6 @@
+name: sigma_dd_file_overwrite
+mode: alert
+eval: |
+  (
+    ((e.process_executable == "/bin/dd" || e.process_executable == "/usr/bin/dd")) && (e.process_args.contains("of=")) && ((e.process_args.contains("if=/dev/zero") || e.process_args.contains("if=/dev/null")))
+  )
